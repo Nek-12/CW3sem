@@ -1,0 +1,2 @@
+cmake-build-debug/* linguist-detectable=false
+build/* linguist-detectable=false
