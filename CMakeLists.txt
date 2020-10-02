@@ -16,6 +16,4 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 # Disable building tests and examples in libfort project
 set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
 
-add_executable(CW3 lib/sha256.h lib/sha256.cpp src/main.cpp src/Entry.hpp src/Entry.cpp src/CONST.hpp src/util.hpp src/util.cpp)
-add_subdirectory(lib/libfort)
-target_link_libraries(CW3 PRIVATE fort)
+add_executable(CW3 lib/fort.hpp lib/fort.h lib/fort.c lib/sha256.h lib/sha256.cpp src/main.cpp src/Entry.hpp src/Entry.cpp src/CONST.hpp src/util.hpp src/util.cpp)
