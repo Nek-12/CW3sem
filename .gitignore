@@ -221,15 +221,10 @@ fabric.properties
 rel
 debug
 build
+*.txt
 
 #vscode
 .vscode
 
-# custom entries file
-**/custom.txt
-
 # clangd
 .clangd
-
-# tidy
-.clang-tidy
