@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "../lib/sha256.h"
 #include <filesystem>
+
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
     R"((\d{1,2})([-. /])(\d{1,2})([-. /])(\d{4})[ ](\d{2})([-.:])(\d{2})([-.:])(\d{2}))"};
 
@@ -45,15 +46,15 @@ std::string get_password() {
             std::cout << '\b' << ' ' << '\b'; // replace a star with a space
         } else {
             password += static_cast<char>(a); // Add this char
-            std::cout << '*';    // But output the star
+            std::cout << '*';                 // But output the star
         }
     }
     std::cout << std::endl;
     return password;
 }
 
-void set_table_style(
-    fort::char_table& t, unsigned green_col, unsigned red_col) {
+void set_table_style(fort::char_table& t, unsigned green_col,
+                     unsigned red_col) {
     t.set_cell_text_align(fort::text_align::center);
     t.set_border_style(FT_BASIC2_STYLE);
     t.column(green_col).set_cell_content_fg_color(fort::color::green);
@@ -67,12 +68,12 @@ void ensure_file_exists(const std::string& f) {
     }
 }
 
-//first is whether the check succeeded, second is error message
+// first is whether the check succeeded, second is error message
 auto check_string(const std::string& s, CHECK mode)
--> std::pair<bool, std::string> {
+    -> std::pair<bool, std::string> {
     auto msgFalse = [&s](const std::string& msg) {
-      return std::make_pair(false, "The value " + s + " is invalid: \n" +
-                                   msg + '\n');
+        return std::make_pair(false, "The value " + s + " is invalid: \n" +
+                                         msg + '\n');
     };
     if (s.empty())
         return msgFalse("No data?");
@@ -83,7 +84,7 @@ auto check_string(const std::string& s, CHECK mode)
     case 'n': // No spaces
         if (s.size() < 3 || s.size() > 75)
             return msgFalse("Too short/long for a word");
-        for (const auto & ch : s)
+        for (const auto& ch : s)
             if (!(isalnum(ch) || ch == '.' || ch == '-' || ch == '_' ||
                   ch == '\'' || ch == '#'))
                 return msgFalse("Invalid characters");
@@ -91,7 +92,7 @@ auto check_string(const std::string& s, CHECK mode)
     case 's': // spaces
         if (s.size() < 2)
             return msgFalse("Too short/long for a line");
-        for (const auto & ch : s)
+        for (const auto& ch : s)
             if (!(isalnum(ch) || ispunct(ch) || ch == ' '))
                 return msgFalse("Invalid characters");
         break;
@@ -130,9 +131,9 @@ DateTime DateTime::deserialize(const std::string& str, IS_PAST is_past) {
         res.str(2) != res.str(4) || res.str(7) != res.str(9))
         exc();
 
-    int year   = std::stoi(res.str(1));
+    int year  = std::stoi(res.str(1));
     int month = std::stoi(res.str(3));
-    int day  = std::stoi(res.str(5));
+    int day   = std::stoi(res.str(5));
     int h     = std::stoi(res.str(6));
     int m     = std::stoi(res.str(8));
     int s     = std::stoi(res.str(10));
@@ -141,9 +142,10 @@ DateTime DateTime::deserialize(const std::string& str, IS_PAST is_past) {
     DateTime dt(year, month, day, h, m, s);
 
     if (is_past != IS_PAST::ANY) { // the user requested sanity check
-        bool cond = dt < cur;  //is in the past?
-        if (!is_past)     // if we want future date
-            cond = !cond; // invert the result (if in the past then becomes false)
+        bool cond = dt < cur;      // is in the past?
+        if (!is_past)              // if we want future date
+            cond =
+                !cond; // invert the result (if in the past then becomes false)
         if (!cond)
             exc();
     }
@@ -151,97 +153,52 @@ DateTime DateTime::deserialize(const std::string& str, IS_PAST is_past) {
 }
 
 DateTime::DateTime(int year, int month, int day, int hour, int minute,
-                   int second): y(year), mon(month), d(day), h(hour), min(minute), s(second) {
-    auto        exc = []() { throw std::invalid_argument("invalid values for DateTime()"); };
-    if (year < 0 || hour >= 24 || minute >= 60 || second >= 60
-        || hour < 0 || minute < 0 || second < 0) exc();
-    switch (month) {
-    case 0:
-    case 1:
-    case 3:
-    case 5:
-    case 7:
-    case 8:
-    case 10:
-    case 12:
-        if (day > 31)
-            exc();
-        break;
-    case 4:
-    case 6:
-    case 9:
-    case 11:
-        if (day > 30)
-            exc();
-        break;
-    case 2:
-        if (is_leap(year)) {
-            if (day > 29)
-                exc();
-        } else if (day > 28)
-            exc();
-        break;
-    default: exc();
-    } // switch
+                   int second) :
+    y(year),
+    mon(month), d(day), h(hour), min(minute), s(second) {
+    auto exc = []() {
+        throw std::invalid_argument("invalid values for DateTime()");
+    };
+    if (year < 0 || hour >= 24 || minute >= 60 || second >= 60 || hour < 0 ||
+        minute < 0 || second < 0)
+        exc();
+    if (day > days_in(mon, year))
+        exc();
 }
 
 DateTime DateTime::operator-=(const DateTime& rhs) {
-        s -= rhs.s;
-        if (s < 0) {
-            s += 60;
-            --min;
-        }
-        min -= rhs.min;
-        if (min < 0) {
-            min += 60;
-            --h;
-        }
-        h -= rhs.h;
-        if (h < 0) {
-            h += 24;
-            --d;
-        }
+    s -= rhs.s;
+    if (s < 0) {
+        s += 60;
+        --min;
+    }
+    min -= rhs.min;
+    if (min < 0) {
+        min += 60;
+        --h;
+    }
+    h -= rhs.h;
+    if (h < 0) {
+        h += 24;
+        --d;
+    }
 
-        d -= rhs.d;
-        if (d < 0) {
-            --mon;
-            switch (mon) {
-            case 1:
-            case 3:
-            case 5:
-            case 7:
-            case 8:
-            case 10:
-            case 12:
-                d+=31;
-                break;
-            case 4:
-            case 6:
-            case 9:
-            case 11:
-                d+=30;
-                break;
-            case 2:
-                if (DateTime::is_leap(std::abs(y-rhs.y))) {
-                    d+=29;
-                } else
-                    d+=28;
-                break;
-            default:
-                throw std::invalid_argument("Default case when parsing month");
-            } // switch
-        }//if dt.d < 0
-        mon -= rhs.mon;
-        if (mon < 0) {
-            mon += 12;
-            --y;
-        }
+    d -= rhs.d;
+    if (d < 0) {
+        --mon;
+        d += days_in(mon, std::abs(y - rhs.y));
+    } // if dt.d < 0
+    mon -= rhs.mon;
+    if (mon < 0) {
+        mon += 12;
+        --y;
+    }
 
-        y -= rhs.y;
-        if (y < 0)
-            y = 0;
+    y -= rhs.y;
+    if (y < 0)
+        y = 0;
 
-        return *this;
+    return *this;
 }
 DateTime DateTime::operator+=(const DateTime& rhs) {
 
@@ -285,4 +242,22 @@ bool operator<(const DateTime& lhs, const DateTime& rhs) {
         }
     }
     return false;
+}
+
+int DateTime::days_in(int month, int year) {
+    switch (month) {
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 8:
+    case 10:
+    case 12: return 31;
+    case 4:
+    case 6:
+    case 9:
+    case 11: return 30;
+    case 2: return (DateTime::is_leap(year) ? 29 : 28);
+    default: throw std::invalid_argument("Default case when parsing month");
+    }
 }

@@ -44,16 +44,10 @@ enum CHECK {
 
 // ISO8601 datetime class
 struct DateTime {
-    // TODO: Operator -, +=, -=,
+    inline static const double APPROX_MONTH_DURATION_DAYS = 30.4583333;
+    inline static const double APPROX_YEAR_DURATION_DAYS = 365.242;
 
     enum IS_PAST { YES = 1, NO = 0, ANY = -1 };
-
-    int y   = 0;
-    int mon = 0;
-    int d   = 0;
-    int h   = 0;
-    int min = 0;
-    int s   = 0;
 
     friend DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
         DateTime sum = lhs;
@@ -96,6 +90,22 @@ struct DateTime {
         return os << t.to_string();
     }
 
+    int operator[](int n) const {
+        switch (n) {
+        case 1: return y;
+        case 2: return mon;
+        case 3: return d;
+        case 4: return h;
+        case 5: return min;
+        case 6: return s;
+        default: throw std::invalid_argument("subscript out of range");
+        }
+    }
+
+    bool operator!() const {
+        return y == 0 && mon == 0 && d == 0 && h == 0 && min == 0 && s == 0;
+    }
+
     DateTime() = default;
 
     DateTime(int year, int month, int day, int hour, int minute, int second);
@@ -117,11 +127,49 @@ struct DateTime {
     }
 
     static bool is_leap(int year) {
-        if (year < 0) throw std::invalid_argument("negative year");
-        return year != 0 && (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
+        if (year < 0)
+            throw std::invalid_argument("negative year");
+        return year != 0 &&
+               (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
+    }
+
+    static int days_in(int month, int year);
+
+    [[nodiscard]] double to_s_approx() const {
+        return s + min * 60 + h * 3600 + d * 24 * 3600 + mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
+               y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
+    }
+
+    [[nodiscard]] double to_min_approx() const {
+        return static_cast<double>(s) / 60 + min + h*60 + d*24*60 + mon * APPROX_MONTH_DURATION_DAYS *24 * 60 + y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
+    }
+
+    [[nodiscard]] double to_h_approx() const {
+        return static_cast<double>(s) / 3600 + static_cast<double>(min)/60 + h + d*24 + mon * APPROX_MONTH_DURATION_DAYS *24  + y * APPROX_YEAR_DURATION_DAYS * 24 ;
+    }
+
+    [[nodiscard]] double to_d_approx() const {
+        return static_cast<double>(s) / 3600 /24 + static_cast<double>(min)/60/24 + static_cast<double>(h)/24 + d + mon *APPROX_MONTH_DURATION_DAYS  + y * APPROX_YEAR_DURATION_DAYS ;
+    }
+
+    [[nodiscard]] double to_mon_approx() const {
+        double md = APPROX_MONTH_DURATION_DAYS;
+        return static_cast<double>(s) / 3600/24/md + static_cast<double>(min)/60/24/md + static_cast<double>(h)/24/md + static_cast<double>(d)/md + mon  + y * APPROX_YEAR_DURATION_DAYS /md ;
+    }
+
+    [[nodiscard]] double to_y_approx() const {
+        double yd = APPROX_YEAR_DURATION_DAYS;
+        return static_cast<double>(s) / 3600/24/yd + static_cast<double>(min)/60/24/yd + static_cast<double>(h)/24/yd + static_cast<double>(d)/yd + static_cast<double>(mon)/12  + y ;
     }
 
 private:
+    int y   = 0;
+    int mon = 0;
+    int d   = 0;
+    int h   = 0;
+    int min = 0;
+    int s   = 0;
+
     static const std::regex date_time_regex;
 };
 
