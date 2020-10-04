@@ -4,4 +4,8 @@
 
 #pragma once
 
+namespace CONST {
 
+
+
+} //namespace CONST

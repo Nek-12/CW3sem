@@ -4,6 +4,7 @@
 #include "util.hpp"
 #include "../lib/sha256.h"
 #include <filesystem>
+#include <random>
 
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
     R"((\d{1,2})([-. /])(\d{1,2})([-. /])(\d{4})[ ](\d{2})([-.:])(\d{2})([-.:])(\d{2}))"};
@@ -30,6 +31,23 @@ inline void cls() {                   // This function depends on platform
 std::string hash(const std::string& s) {
     SHA256 sha256;
     return sha256(s);
+}
+
+id_type genID() { // Static to not diminish randomness
+    static std::default_random_engine e(
+        std::random_device{}()); // Initialize a random engine from system
+    // random device
+    static std::uniform_int_distribution<id_type> rng(
+        0, MAX_ID); // Generate numbers for IDs from 0 to a large system value
+    return rng(e);  // use random engine
+}
+
+id_type stoid(const std::string& s) {
+#ifndef __linux__
+    return std::stoull(s);
+#else // This function depends on the platform. See header.h for details
+    return std::stoul(s);
+#endif
 }
 
 // Input password, hide it with *'s

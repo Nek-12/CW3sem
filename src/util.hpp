@@ -13,16 +13,20 @@ constexpr std::string_view CLS = "cls";
 static const int CARRIAGE_RETURN_CHAR =
     13; // getch() returns different keycodes for windows and linux
 static const int BACKSPACE_CHAR = 8;
-using ull                       = unsigned long long;
+using id_type                   = unsigned long long;
 // unsigned long long (!) is just ~10^20
 #else
 constexpr std::string_view CLS        = "clear";
-using ull                             = unsigned long;
+using id_type                         = unsigned long;
 static const int CARRIAGE_RETURN_CHAR = 10;
 static const int BACKSPACE_CHAR       = 127;
 #include <termios.h>
 int getch();
 #endif
+#define MAX_ID 1000000000000000000u // 19 digits
+#define MAX_ID_LENGTH                                                          \
+    19 // I have settled on this maximum length of the id, but it can be
+       // increased and even made a string.
 
 void ensure_file_exists(const std::string& f);
 void set_table_style(fort::char_table& t, unsigned green_col, unsigned red_col);
@@ -31,7 +35,8 @@ std::string        get_password();
 inline void        cls();
 inline std::string lowercase(const std::string&);
 inline std::string hash(const std::string& s);
-
+id_type            genID();
+id_type            stoid(const std::string& s);
 enum CHECK {
     LINE  = 's',
     WORD  = 'n',
@@ -45,7 +50,7 @@ enum CHECK {
 // ISO8601 datetime class
 struct DateTime {
     inline static const double APPROX_MONTH_DURATION_DAYS = 30.4583333;
-    inline static const double APPROX_YEAR_DURATION_DAYS = 365.242;
+    inline static const double APPROX_YEAR_DURATION_DAYS  = 365.242;
 
     enum IS_PAST { YES = 1, NO = 0, ANY = -1 };
 
@@ -136,30 +141,44 @@ struct DateTime {
     static int days_in(int month, int year);
 
     [[nodiscard]] double to_s_approx() const {
-        return s + min * 60 + h * 3600 + d * 24 * 3600 + mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
+        return s + min * 60 + h * 3600 + d * 24 * 3600 +
+               mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
                y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
     }
 
     [[nodiscard]] double to_min_approx() const {
-        return static_cast<double>(s) / 60 + min + h*60 + d*24*60 + mon * APPROX_MONTH_DURATION_DAYS *24 * 60 + y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
+        return static_cast<double>(s) / 60 + min + h * 60 + d * 24 * 60 +
+               mon * APPROX_MONTH_DURATION_DAYS * 24 * 60 +
+               y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
     }
 
     [[nodiscard]] double to_h_approx() const {
-        return static_cast<double>(s) / 3600 + static_cast<double>(min)/60 + h + d*24 + mon * APPROX_MONTH_DURATION_DAYS *24  + y * APPROX_YEAR_DURATION_DAYS * 24 ;
+        return static_cast<double>(s) / 3600 + static_cast<double>(min) / 60 +
+               h + d * 24 + mon * APPROX_MONTH_DURATION_DAYS * 24 +
+               y * APPROX_YEAR_DURATION_DAYS * 24;
     }
 
     [[nodiscard]] double to_d_approx() const {
-        return static_cast<double>(s) / 3600 /24 + static_cast<double>(min)/60/24 + static_cast<double>(h)/24 + d + mon *APPROX_MONTH_DURATION_DAYS  + y * APPROX_YEAR_DURATION_DAYS ;
+        return static_cast<double>(s) / 3600 / 24 +
+               static_cast<double>(min) / 60 / 24 +
+               static_cast<double>(h) / 24 + d +
+               mon * APPROX_MONTH_DURATION_DAYS + y * APPROX_YEAR_DURATION_DAYS;
     }
 
     [[nodiscard]] double to_mon_approx() const {
         double md = APPROX_MONTH_DURATION_DAYS;
-        return static_cast<double>(s) / 3600/24/md + static_cast<double>(min)/60/24/md + static_cast<double>(h)/24/md + static_cast<double>(d)/md + mon  + y * APPROX_YEAR_DURATION_DAYS /md ;
+        return static_cast<double>(s) / 3600 / 24 / md +
+               static_cast<double>(min) / 60 / 24 / md +
+               static_cast<double>(h) / 24 / md + static_cast<double>(d) / md +
+               mon + y * APPROX_YEAR_DURATION_DAYS / md;
     }
 
     [[nodiscard]] double to_y_approx() const {
         double yd = APPROX_YEAR_DURATION_DAYS;
-        return static_cast<double>(s) / 3600/24/yd + static_cast<double>(min)/60/24/yd + static_cast<double>(h)/24/yd + static_cast<double>(d)/yd + static_cast<double>(mon)/12  + y ;
+        return static_cast<double>(s) / 3600 / 24 / yd +
+               static_cast<double>(min) / 60 / 24 / yd +
+               static_cast<double>(h) / 24 / yd + static_cast<double>(d) / yd +
+               static_cast<double>(mon) / 12 + y;
     }
 
 private:

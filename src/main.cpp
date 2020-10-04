@@ -1,7 +1,6 @@
 #include "util.hpp"
-#include <limits.h>
 
-int main(int argc, const char** argv) {
+int main(int , const char** ) {
     Log() << Log::flush;
     fort::char_table t;
     t << fort::header << "HELLO" << fort::endr;
