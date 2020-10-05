@@ -88,7 +88,7 @@ struct DateTime {
     }
 
     friend bool operator>=(const DateTime& lhs, const DateTime& rhs) {
-        return !(lhs <= rhs);
+        return rhs <= lhs;
     }
 
     friend std::ostream& operator<<(std::ostream& os, const DateTime& t) {
