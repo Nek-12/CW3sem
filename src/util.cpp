@@ -5,6 +5,8 @@
 #include "../lib/sha256.h"
 #include <filesystem>
 #include <random>
+#include <cstddef>
+
 
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
     R"((\d{1,2})([-. /])(\d{1,2})([-. /])(\d{4})[ ](\d{2})([-.:])(\d{2})([-.:])(\d{2}))"};
@@ -31,6 +33,26 @@ inline void cls() {                   // This function depends on platform
 std::string hash(const std::string& s) {
     SHA256 sha256;
     return sha256(s);
+}
+
+std::vector<std::string> split(
+        const std::string& s,
+        const std::string& delims,
+        SPLIT_EMPTY empties = SPLIT_EMPTY::ALLOWED ) {
+    std::vector<std::string> result;
+    size_t current = 0;
+    size_t next = -1;
+    do {
+        if (empties == SPLIT_EMPTY::NOT_ALLOWED) {
+            next = s.find_first_not_of( delims, next + 1 );
+            if (next == std::string::npos) break;
+            next -= 1;
+        }
+        current = next + 1;
+        next = s.find_first_of( delims, current );
+        result.push_back( s.substr( current, next - current ) );
+    } while (next != std::string::npos);
+    return result;
 }
 
 id_type genID() { // Static to not diminish randomness

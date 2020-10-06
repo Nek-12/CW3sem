@@ -2,11 +2,13 @@
 // Created by nek on 2020-10-02.
 //
 #pragma once
+
 #include <ctime>
 #include <fort.hpp>
 #include <fstream>
 #include <iostream>
 #include <regex>
+
 #ifndef __linux__
 constexpr std::string_view CLS = "cls";
 #include <conio.h>
@@ -16,43 +18,66 @@ static const int BACKSPACE_CHAR = 8;
 using id_type                   = unsigned long long;
 // unsigned long long (!) is just ~10^20
 #else
-constexpr std::string_view CLS        = "clear";
-using id_type                         = unsigned long;
+constexpr std::string_view CLS = "clear";
+using id_type = unsigned long;
 static const int CARRIAGE_RETURN_CHAR = 10;
-static const int BACKSPACE_CHAR       = 127;
+static const int BACKSPACE_CHAR = 127;
+
 #include <termios.h>
+
 int getch();
+
 #endif
 #define MAX_ID 1000000000000000000u // 19 digits
 #define MAX_ID_LENGTH                                                          \
     19 // I have settled on this maximum length of the id, but it can be
-       // increased and even made a string.
+// increased and even made a string.
+
+enum SPLIT_EMPTY {
+   ALLOWED, NOT_ALLOWED
+};
+
+std::vector<std::string> split(const std::string& s, const std::string& delims,
+        SPLIT_EMPTY empties)
 
 void ensure_file_exists(const std::string& f);
+
 void set_table_style(fort::char_table& t, unsigned green_col, unsigned red_col);
-inline void        pause(); // Wait for a keypress
-std::string        get_password();
-inline void        cls();
+
+inline void pause(); // Wait for a keypress
+std::string get_password();
+
+inline void cls();
+
 inline std::string lowercase(const std::string&);
+
 inline std::string hash(const std::string& s);
-id_type            genID();
-id_type            stoid(const std::string& s);
+
+id_type genID();
+
+id_type stoid(const std::string& s);
+
+auto check_string(const std::string& s, CHECK mode)
+-> std::pair<bool, std::string>;
+
 enum CHECK {
-    LINE  = 's',
-    WORD  = 'n',
-    PASS  = 'p',
-    BOOL  = 'b',
+    LINE = 's',
+    WORD = 'n',
+    PASS = 'p',
+    BOOL = 'b',
     FLOAT = 'f',
-    ID    = 'i',
-    YEAR  = 'y'
+    ID = 'i',
+    YEAR = 'y'
 };
 
 // ISO8601 datetime class
 struct DateTime {
     inline static const double APPROX_MONTH_DURATION_DAYS = 30.4583333;
-    inline static const double APPROX_YEAR_DURATION_DAYS  = 365.242;
+    inline static const double APPROX_YEAR_DURATION_DAYS = 365.242;
 
-    enum IS_PAST { YES = 1, NO = 0, ANY = -1 };
+    enum IS_PAST {
+        YES = 1, NO = 0, ANY = -1
+    };
 
     friend DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
         DateTime sum = lhs;
@@ -97,13 +122,20 @@ struct DateTime {
 
     int operator[](int n) const {
         switch (n) {
-        case 1: return y;
-        case 2: return mon;
-        case 3: return d;
-        case 4: return h;
-        case 5: return min;
-        case 6: return s;
-        default: throw std::invalid_argument("subscript out of range");
+            case 0:
+                return y;
+            case 1:
+                return mon;
+            case 2:
+                return d;
+            case 3:
+                return h;
+            case 4:
+                return min;
+            case 5:
+                return s;
+            default:
+                throw std::invalid_argument("subscript out of range");
         }
     }
 
@@ -116,8 +148,8 @@ struct DateTime {
     DateTime(int year, int month, int day, int hour, int minute, int second);
 
     static DateTime get_current() {
-        time_t t   = time(nullptr); // get system time
-        tm*    now = localtime(&t); // format it according to the region
+        time_t t = time(nullptr); // get system time
+        tm* now = localtime(&t); // format it according to the region
         return DateTime(now->tm_year + 1900, now->tm_mon + 1, now->tm_mday,
                         now->tm_hour, now->tm_min, now->tm_sec);
     }
@@ -182,17 +214,18 @@ struct DateTime {
     }
 
 private:
-    int y   = 0;
+    int y = 0;
     int mon = 0;
-    int d   = 0;
-    int h   = 0;
+    int d = 0;
+    int h = 0;
     int min = 0;
-    int s   = 0;
+    int s = 0;
 
     static const std::regex date_time_regex;
 };
 
 #ifndef NDEBUG
+
 class Log {
 
     struct Stream {
@@ -205,10 +238,11 @@ class Log {
             get().use_cerr = !get().use_cerr;
             std::string s("-------------| Now outputting to ");
             s.append((get().use_cerr ? "cerr" : "file"))
-                .append(" |-------------\n");
+                    .append(" |-------------\n");
             get().f << s;
             std::cerr << s;
         }
+
         static bool get_cerr() { return get().use_cerr; }
 
         static void flush() {
@@ -217,7 +251,7 @@ class Log {
             auto& ref = static_cast<std::fstream&>(stream());
             ref.close();
             ref.open(LOG_FNAME, std::fstream::out | std::fstream::trunc |
-                                    std::fstream::in);
+                                std::fstream::in);
             ref << "-------------| Log flushed |-------------" << std::endl;
         }
 
@@ -225,17 +259,19 @@ class Log {
 
     private:
         inline static const std::string LOG_FNAME = "log.txt"; // NOLINT
-        static Stream&                  get() {
+        static Stream& get() {
             static Stream s;
             return s;
         }
+
         Stream() {
             if (!f)
                 throw std::runtime_error("can't open log file");
             f << "-------------| Started log session |-------------"
               << std::endl;
         }
-        bool         use_cerr = false;
+
+        bool use_cerr = false;
         std::fstream f{LOG_FNAME, std::ios::in | std::ios::out | std::ios::app};
     };
 
@@ -244,7 +280,8 @@ public:
 
     ~Log() { Stream::stream() << '\n'; }
 
-    template <typename T> Log& operator<<(const T& o) {
+    template<typename T>
+    Log& operator<<(const T& o) {
         Stream::stream() << o;
         return *this;
     }

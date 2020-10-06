@@ -3,9 +3,12 @@
 //
 
 #pragma once
+#include <string>
 
 namespace CONST {
 
+    constexpr char HABIT_DELIM = '#';
+    constexpr char ACTIVITY_DELIM = '>';
 
 
 } //namespace CONST

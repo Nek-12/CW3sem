@@ -4,6 +4,7 @@
 #pragma once
 
 #include "util.hpp"
+#include <set>
 
 class Entry {
 public:
@@ -11,7 +12,7 @@ public:
 
     [[nodiscard]] virtual std::string serialize() const = 0;
 
-    const std::string& get_name() const {
+    [[nodiscard]] const std::string& get_name() const {
         return name;
     }
 
@@ -19,11 +20,11 @@ public:
         Entry::name = name;
     }
 
-    id_type get_id() const {
+    [[nodiscard]] id_type get_id() const {
         return id;
     }
 
-    double get_points() const {
+    [[nodiscard]] double get_points() const {
         return cost;
     }
 
@@ -31,16 +32,16 @@ public:
         Entry::cost = cost;
     }
 
-    const DateTime& get_created() const {
+    [[nodiscard]] const DateTime& get_created() const {
         return created;
     }
 
-    const std::string& get_descr() const {
+    [[nodiscard]] const std::string& get_descr() const {
         return descr;
     }
 
-    void set_descr(const std::string& descr) {
-        Entry::descr = descr;
+    void set_descr(const std::string& description) {
+        descr = description;
     }
 
 protected:
@@ -59,8 +60,10 @@ public:
     [[nodiscard]] double points() const override;
     [[nodiscard]] std::string serialize() const override;
 
+    static constexpr char DELIM = '@';
 private:
-    std::vector<DateTime> check_ins;//when did we mark this habit as complete?
+    //automatically sorted
+    std::set<DateTime> check_ins;//when did we mark this habit as complete?
     bool archived = false;
     int reps = 0; //total
     int best_streak = 0;
@@ -74,14 +77,16 @@ public:
     [[nodiscard]] double points() const override;
     [[nodiscard]] std::string serialize() const override;
 
+    static constexpr char DELIM = '$';
 private:
-    std::vector<DateTime> time_elapsed; //date and how much time was spend on that day
+    std::set<DateTime> time_elapsed; //date and how much time was spend on that day
     DateTime total_time; //total time spent on that activity
     double benefit_multiplier = 1; //by how much do we multiply the cost
 };
 
 class Goal : public Entry {
 public:
+    static constexpr char DELIM = '#';
     [[nodiscard]] double points() const override;
 
     [[nodiscard]] std::string serialize() const override;
