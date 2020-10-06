@@ -11,6 +11,11 @@ std::string Entry::serialize() const {
     return ss.str();
 }
 
+void Entry::validate_serialized_data(const std::string& s, char delimiter, int num_fields) {
+    if (s.empty() || s.at(0) != delimiter || std::count(s.begin(),s.end(),';') != num_fields-1) //one ; less
+        throw std::invalid_argument("attempted to deserialize " + s);
+}
+
 //////////////////HABIT/////////////////////
 
 double Habit::points() const {
@@ -39,8 +44,7 @@ std::string Habit::serialize() const {
 }
 
 Habit Habit::deserialize(const std::string& s) {
-    if (s.empty() || s.at(0) != DELIM || std::count(s.begin(),s.end(),';') != 7) //one ; less
-        throw std::invalid_argument("attempted to deserialize " + s);
+    validate_serialized_data(s,DELIM,8);
     Log() << "habit to deserialize: " << s;
     auto v = split(s, ";", false);
     v[0].erase(0,1); //remove DELIM
@@ -82,8 +86,7 @@ std::string Activity::serialize() const {
 
 
 Activity Activity::deserialize(const std::string& s) {
-    if (s.empty() || s.at(0) != DELIM || std::count(s.begin(),s.end(),';') != 6) //one ; less
-        throw std::invalid_argument("attempted to deserialize " + s);
+    validate_serialized_data(s,DELIM,7);
     auto v = split(s, ";", false);
     v[0].erase(0,1); //remove DELIM
     auto te_svec = split(v[4], ",", false);
@@ -107,6 +110,11 @@ double Activity::points() const {
     return get_cost() * benefit_multiplier * a;
 }
 
+void Activity::add_time(const DateTime& dt) {
+    time_elapsed.insert(dt);
+    total_time+=dt;
+}
+
 
 ////////////////GOAL//////////////////
 
@@ -116,3 +124,26 @@ double Activity::points() const {
     DateTime deadline;
  */
 
+Goal Goal::deserialize(const std::string& s) {
+    validate_serialized_data(s,DELIM,7);
+    auto v = split(s,";",true);
+    return Goal(stoid(v[0]), //id
+                v[1], //name
+                std::stod(v[2]), //cost
+                DateTime::deserialize(v[3],DateTime::PAST), //created
+                std::stoi(v[4]), //completed
+                DateTime::deserialize(v[5], DateTime::ANY), //est_length
+                DateTime::deserialize(v[6],DateTime::ANY)); //deadline
+}
+
+double Goal::points() const {
+    return (get_cost() + est_length.to_h_approx())*completed;
+}
+
+std::string Goal::serialize() const {
+    std::stringstream ss;
+    char delim = ';';
+    ss << DELIM << Entry::serialize() << delim
+    << completed << delim << est_length << delim << deadline;
+    return ss.str();
+}
