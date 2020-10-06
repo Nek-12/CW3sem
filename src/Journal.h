@@ -30,7 +30,7 @@ public:
 
     template <typename ...Args>
     T& emplace_back(Args... args) {
-        return v.emplace_back(std::forward(args)...);
+        return v.emplace_back(args...);
     }
 
     auto push_back(const T& o) {

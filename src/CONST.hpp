@@ -7,8 +7,7 @@
 
 namespace CONST {
 
-    constexpr char HABIT_DELIM = '#';
-    constexpr char ACTIVITY_DELIM = '>';
+    static constexpr int ACTIVITY_MULTIPLIER_PER_HOUR = 5;
 
 
 } //namespace CONST

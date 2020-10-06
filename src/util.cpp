@@ -38,12 +38,12 @@ std::string hash(const std::string& s) {
 std::vector<std::string> split(
         const std::string& s,
         const std::string& delims,
-        SPLIT_EMPTY empties = SPLIT_EMPTY::ALLOWED ) {
+        bool empty_tokens_allowed) {
     std::vector<std::string> result;
     size_t current = 0;
     size_t next = -1;
     do {
-        if (empties == SPLIT_EMPTY::NOT_ALLOWED) {
+        if (!empty_tokens_allowed) {
             next = s.find_first_not_of( delims, next + 1 );
             if (next == std::string::npos) break;
             next -= 1;
@@ -55,7 +55,7 @@ std::vector<std::string> split(
     return result;
 }
 
-id_type genID() { // Static to not diminish randomness
+id_type gen_id() { // Static to not diminish randomness
     static std::default_random_engine e(
         std::random_device{}()); // Initialize a random engine from system
     // random device
@@ -164,7 +164,9 @@ auto check_string(const std::string& s, CHECK mode)
     return std::make_pair(true, "");
 }
 
-DateTime DateTime::deserialize(const std::string& str, IS_PAST is_past) {
+/////////////////DATETIME/////////////////
+
+DateTime DateTime::deserialize(const std::string& str, int is_past) {
     auto        exc = [&str]() { throw std::invalid_argument(str); };
     std::smatch res;
     if (!std::regex_match(str, res, date_time_regex) ||
@@ -300,4 +302,45 @@ int DateTime::days_in(int month, int year) {
     case 2: return (DateTime::is_leap(year) ? 29 : 28);
     default: throw std::invalid_argument("Default case when parsing month");
     }
+}
+
+double DateTime::to_y_approx() const {
+    double yd = APPROX_YEAR_DURATION_DAYS;
+    return static_cast<double>(s) / 3600 / 24 / yd +
+           static_cast<double>(min) / 60 / 24 / yd +
+           static_cast<double>(h) / 24 / yd + static_cast<double>(d) / yd +
+           static_cast<double>(mon) / 12 + y;
+}
+
+double DateTime::to_mon_approx() const {
+    double md = APPROX_MONTH_DURATION_DAYS;
+    return static_cast<double>(s) / 3600 / 24 / md +
+           static_cast<double>(min) / 60 / 24 / md +
+           static_cast<double>(h) / 24 / md + static_cast<double>(d) / md +
+           mon + y * APPROX_YEAR_DURATION_DAYS / md;
+}
+
+double DateTime::to_d_approx() const {
+    return static_cast<double>(s) / 3600 / 24 +
+           static_cast<double>(min) / 60 / 24 +
+           static_cast<double>(h) / 24 + d +
+           mon * APPROX_MONTH_DURATION_DAYS + y * APPROX_YEAR_DURATION_DAYS;
+}
+
+double DateTime::to_h_approx() const {
+    return static_cast<double>(s) / 3600 + static_cast<double>(min) / 60 +
+           h + d * 24 + mon * APPROX_MONTH_DURATION_DAYS * 24 +
+           y * APPROX_YEAR_DURATION_DAYS * 24;
+}
+
+double DateTime::to_min_approx() const {
+    return static_cast<double>(s) / 60 + min + h * 60 + d * 24 * 60 +
+           mon * APPROX_MONTH_DURATION_DAYS * 24 * 60 +
+           y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
+}
+
+double DateTime::to_s_approx() const {
+    return s + min * 60 + h * 3600 + d * 24 * 3600 +
+           mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
+           y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
 }
