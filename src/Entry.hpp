@@ -42,6 +42,9 @@ private:
     DateTime created;
 };
 
+
+//TODO: the ability to undo a check-in
+
 class Habit : public Entry {
 public:
     Habit(id_type id, const std::string& name, double cost) : Entry(id, name, cost) {}
@@ -67,6 +70,10 @@ public:
     [[nodiscard]] int get_best_streak() const { return best_streak; }
 
     [[nodiscard]] int get_streak() const { return streak; }
+
+    void check_in();
+
+    [[nodiscard]] auto get_check_ins() const { return check_ins; }
 
 private:
     //automatically sorted

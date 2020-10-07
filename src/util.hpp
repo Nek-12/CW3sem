@@ -154,8 +154,9 @@ struct DateTime {
 
     [[nodiscard]] std::string to_string() const {
         std::stringstream ss;
-        ss << this->y << "." << this->mon << "." << this->d << " " << this->h
-           << ":" << this->min << ":" << this->s;
+        ss << std::setfill('0') << std::setw(4) << this->y << "." << std::setw(2) << this->mon
+           << "." << std::setw(2) << this->d << " " << std::setw(2) << this->h
+           << ":" << std::setw(2) << this->min << ":" << std::setw(2) << this->s;
         return ss.str();
     }
 

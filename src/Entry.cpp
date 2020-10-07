@@ -37,8 +37,7 @@ std::string Habit::serialize() const {
         delim = ',';
     }
     delim = ';';
-    ss << delim << archived << delim << best_streak << delim
-       << streak << delim;
+    ss << delim << archived << delim << best_streak << delim << streak;
     Log() << "habit serialized: " << ss.str();
     return ss.str();
 }
@@ -56,11 +55,17 @@ Habit Habit::deserialize(const std::string& s) {
     return Habit(stoid(v[0]), //id
                  v[1], //name
                  std::stod(v[2]), //cost
-                 DateTime::deserialize(v[3],DateTime::PAST), //created
-                  check_ins, //check_ins set
+                 DateTime::deserialize(v[3], DateTime::PAST), //created
+                 check_ins, //check_ins set
                  std::stoi(v[5]), //archived
                  std::stoi(v[6]), //best streak
                  std::stoi(v[7])); //streak
+}
+
+void Habit::check_in() {
+    if (archived) throw std::runtime_error("Can't check in archived habit");
+    check_ins.insert(DateTime::get_current());
+    if (best_streak < ++streak) best_streak = streak;
 }
 
 /////////////////////ACTIVITY/////////////////////////
@@ -80,13 +85,14 @@ std::string Activity::serialize() const {
         delim = ',';
     }
     delim = ';';
-    ss << total_time << delim << benefit_multiplier;
+    ss << delim << total_time << delim << benefit_multiplier;
     return ss.str();
 }
 
 
 Activity Activity::deserialize(const std::string& s) {
-    validate_serialized_data(s,DELIM,7);
+    validate_serialized_data(s, DELIM, 7);
+    Log() << "activity to deserialize: " << s;
     auto v = split(s, ";", false);
     v[0].erase(0,1); //remove DELIM
     auto te_svec = split(v[4], ",", false);
@@ -101,7 +107,6 @@ Activity Activity::deserialize(const std::string& s) {
                     time_elapsed, //time_elapsed set
                     DateTime::deserialize(v[5],DateTime::ANY),  //total_time
                     std::stod(v[6])); //benefit_multiplier
-
 }
 
 double Activity::points() const {
@@ -125,15 +130,18 @@ void Activity::add_time(const DateTime& dt) {
  */
 
 Goal Goal::deserialize(const std::string& s) {
-    validate_serialized_data(s,DELIM,7);
-    auto v = split(s,";",true);
+    validate_serialized_data(s, DELIM, 7);
+    Log() << "goal to deserialize: " << s;
+    auto v = split(s, ";", true);
+    v[0].erase(0, 1);
+    Log() << "v[0]: " << v[0];
     return Goal(stoid(v[0]), //id
                 v[1], //name
                 std::stod(v[2]), //cost
-                DateTime::deserialize(v[3],DateTime::PAST), //created
+                DateTime::deserialize(v[3], DateTime::PAST), //created
                 std::stoi(v[4]), //completed
                 DateTime::deserialize(v[5], DateTime::ANY), //est_length
-                DateTime::deserialize(v[6],DateTime::ANY)); //deadline
+                DateTime::deserialize(v[6], DateTime::ANY)); //deadline
 }
 
 double Goal::points() const {

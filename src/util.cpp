@@ -9,7 +9,7 @@
 
 
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
-    R"((\d{1,2})([-. /])(\d{1,2})([-. /])(\d{4})[ ](\d{2})([-.:])(\d{2})([-.:])(\d{2}))"};
+        R"((\d{4})([-. /])(\d{1,2})([-. /])(\d{1,2})(\s|T)(\d{2})([-:])(\d{2})([-:])(\d{2}))"};
 
 #ifdef __linux__
 int getch() // Getch for linux
@@ -166,32 +166,34 @@ auto check_string(const std::string& s, CHECK mode)
 
 /////////////////DATETIME/////////////////
 
-DateTime DateTime::deserialize(const std::string& str, int is_past) {
-    auto        exc = [&str]() { throw std::invalid_argument(str); };
+DateTime DateTime::deserialize(const std::string& str, int is_past) try {
+    auto exc = [&str]() { throw std::invalid_argument(str); };
     std::smatch res;
-    if (!std::regex_match(str, res, date_time_regex) ||
-        res.str(2) != res.str(4) || res.str(7) != res.str(9))
+    Log() << "deserializing DT:" << str;
+    if (!std::regex_match(str, res, date_time_regex)
+        || res.str(2) != res.str(4) || res.str(8) != res.str(10))
         exc();
 
-    int year  = std::stoi(res.str(1));
+    int year = std::stoi(res.str(1));
     int month = std::stoi(res.str(3));
-    int day   = std::stoi(res.str(5));
-    int h     = std::stoi(res.str(6));
-    int m     = std::stoi(res.str(8));
-    int s     = std::stoi(res.str(10));
+    int day = std::stoi(res.str(5));
+    int h = std::stoi(res.str(7));
+    int m = std::stoi(res.str(9));
+    int s = std::stoi(res.str(11));
 
     DateTime cur = get_current();
     DateTime dt(year, month, day, h, m, s);
 
-    if (is_past != IS_PAST::ANY) { // the user requested sanity check
+    if (is_past != ANY) { // the user requested sanity check
         bool cond = dt < cur;      // is in the past?
         if (!is_past)              // if we want future date
-            cond =
-                !cond; // invert the result (if in the past then becomes false)
+            cond = !cond; // invert the result
         if (!cond)
             exc();
     }
     return dt;
+} catch (const std::exception& e) {
+    throw std::invalid_argument(str);
 }
 
 DateTime::DateTime(int year, int month, int day, int hour, int minute,
@@ -287,6 +289,7 @@ bool operator<(const DateTime& lhs, const DateTime& rhs) {
 }
 
 int DateTime::days_in(int month, int year) {
+    if (year == 0 || month == 0) return 0;
     switch (month) {
     case 1:
     case 3:
