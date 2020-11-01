@@ -101,6 +101,12 @@ public:
 
     void add_time(const DateTime& dt);
 
+    [[nodiscard]] DateTime get_total_time() const { return total_time; }
+
+    double get_benefit_multiplier() const { return benefit_multiplier; }
+
+    void set_benefit_multiplier(double multiplier) { benefit_multiplier = multiplier; }
+
     static constexpr char DELIM = '$';
 private:
     std::set<DateTime> time_elapsed; //date and how much time was spend on that day
@@ -142,17 +148,4 @@ private:
     bool completed = false;
     DateTime est_length;
     DateTime deadline;
-};
-
-//////////////////////////////DATA////////////////////////////////
-
-class Data {
-public:
-    static Data& get() {
-        static Data inst;
-        return inst;
-    }
-
-private:
-    Data() = default;
 };

@@ -11,25 +11,6 @@
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
         R"((\d{4})([-. /])(\d{1,2})([-. /])(\d{1,2})(\s|T)(\d{2})([-:])(\d{2})([-:])(\d{2}))"};
 
-#ifdef __linux__
-int getch() // Getch for linux
-{
-    struct termios oldattr, newattr; // NOLINT
-    int            ch = 0;
-    tcgetattr(0, &oldattr);
-    newattr = oldattr;
-    newattr.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(0, TCSANOW, &newattr);
-    ch = getchar();
-    tcsetattr(0, TCSANOW, &oldattr);
-    return (ch);
-}
-#endif
-
-inline void cls() {                   // This function depends on platform
-    system(std::string(CLS).c_str()); // NOLINT
-}
-
 std::string hash(const std::string& s) {
     SHA256 sha256;
     return sha256(s);
@@ -67,39 +48,11 @@ id_type gen_id() { // Static to not diminish randomness
 id_type stoid(const std::string& s) {
 #ifndef __linux__
     return std::stoull(s);
-#else // This function depends on the platform. See header.h for details
+#else // This function depends on platform. See header.h for details
     return std::stoul(s);
 #endif
 }
 
-// Input password, hide it with *'s
-std::string get_password() {
-    std::string password;
-    int         a = 0;
-    while ((a = getch()) !=
-           CARRIAGE_RETURN_CHAR) // Differs on linux and windows
-    {                            // While ENTER is not pressed
-        if (a == BACKSPACE_CHAR) {
-            if (password.empty())
-                continue;
-            password.pop_back();              // remove char
-            std::cout << '\b' << ' ' << '\b'; // replace a star with a space
-        } else {
-            password += static_cast<char>(a); // Add this char
-            std::cout << '*';                 // But output the star
-        }
-    }
-    std::cout << std::endl;
-    return password;
-}
-
-void set_table_style(fort::char_table& t, unsigned green_col,
-                     unsigned red_col) {
-    t.set_cell_text_align(fort::text_align::center);
-    t.set_border_style(FT_BASIC2_STYLE);
-    t.column(green_col).set_cell_content_fg_color(fort::color::green);
-    t.column(red_col).set_cell_content_fg_color(fort::color::red);
-}
 
 void ensure_file_exists(const std::string& f) {
     if (!std::filesystem::exists(f)) {
@@ -289,7 +242,7 @@ bool operator<(const DateTime& lhs, const DateTime& rhs) {
 }
 
 int DateTime::days_in(int month, int year) {
-    if (year == 0 || month == 0) return 0;
+    if (year <= 0 || month <= 0) return days_in(get_current()[1], get_current()[0]);
     switch (month) {
     case 1:
     case 3:
@@ -346,4 +299,23 @@ double DateTime::to_s_approx() const {
     return s + min * 60 + h * 3600 + d * 24 * 3600 +
            mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
            y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
+}
+
+int DateTime::operator[](int n) const {
+    switch (n) {
+        case 0:
+            return y;
+        case 1:
+            return mon;
+        case 2:
+            return d;
+        case 3:
+            return h;
+        case 4:
+            return min;
+        case 5:
+            return s;
+        default:
+            throw std::invalid_argument("subscript out of range");
+    }
 }

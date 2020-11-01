@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <numeric>
 
-//TODO: sort() that can accept a lambda;
-
 template<typename T>
 class Journal {
 public:
@@ -28,17 +26,17 @@ public:
         return v.size();
     }
 
-    template <typename ...Args>
+    template<typename ...Args>
     T& emplace_back(Args... args) {
         return v.emplace_back(args...);
     }
 
-    auto push_back(const T& o) {
-        return v.push_back(o);
+    void push_back(const T& o) {
+        v.push_back(o);
     }
 
     void pop_back() {
-        return v.pop_back();
+        v.pop_back();
     }
 
     T& operator[](size_t pos) {
@@ -50,10 +48,18 @@ public:
     }
 
     void erase(size_t pos) {
-        v.erase(std::advance(v.begin,pos));
+        v.erase(v.begin + pos);
     }
 
-    std::vector<T> get_vec() const {
+    std::string serialize() {
+        std::stringstream ss;
+        for (const auto& e: v)
+            ss << e.serialize() << '\n';
+        return ss.str();
+    }
+
+//TODO: Bad style?..
+    const std::vector<T>& get_v() const {
         return v;
     }
 

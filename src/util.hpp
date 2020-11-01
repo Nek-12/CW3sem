@@ -4,34 +4,19 @@
 #pragma once
 
 #include <ctime>
-#include <fort.hpp>
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <iomanip>
 
 #ifndef __linux__
-constexpr std::string_view CLS = "cls";
-#include <conio.h>
-static const int CARRIAGE_RETURN_CHAR =
-    13; // getch() returns different keycodes for windows and linux
-static const int BACKSPACE_CHAR = 8;
 using id_type                   = unsigned long long;
 // unsigned long long (!) is just ~10^20
 #else
-constexpr std::string_view CLS = "clear";
 using id_type = unsigned long;
-static const int CARRIAGE_RETURN_CHAR = 10;
-static const int BACKSPACE_CHAR = 127;
-
-#include <termios.h>
-
-int getch();
-
 #endif
 #define MAX_ID 1000000000000000000u // 19 digits
-#define MAX_ID_LENGTH                                                          \
-    19 // I have settled on this maximum length of the id, but it can be
-// increased and even made a string.
+#define MAX_ID_LENGTH 19
 
 enum CHECK {
     LINE = 's',
@@ -48,16 +33,10 @@ std::vector<std::string> split(const std::string& s, const std::string& delims,
 
 void ensure_file_exists(const std::string& f);
 
-void set_table_style(fort::char_table& t, unsigned green_col, unsigned red_col);
 
-inline void pause(); // Wait for a keypress
-std::string get_password();
+std::string lowercase(const std::string&);
 
-inline void cls();
-
-inline std::string lowercase(const std::string&);
-
-inline std::string hash(const std::string& s);
+std::string hash(const std::string& s);
 
 id_type gen_id();
 
@@ -116,24 +95,7 @@ struct DateTime {
         return os << t.to_string();
     }
 
-    int operator[](int n) const {
-        switch (n) {
-            case 0:
-                return y;
-            case 1:
-                return mon;
-            case 2:
-                return d;
-            case 3:
-                return h;
-            case 4:
-                return min;
-            case 5:
-                return s;
-            default:
-                throw std::invalid_argument("subscript out of range");
-        }
-    }
+    int operator[](int n) const;
 
     bool operator!() const {
         return y == 0 && mon == 0 && d == 0 && h == 0 && min == 0 && s == 0;
