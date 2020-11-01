@@ -37,16 +37,18 @@ std::string Habit::serialize() const {
         delim = ',';
     }
     delim = ';';
+    if (check_ins.empty())
+        ss << delim; //empty value
     ss << delim << archived << delim << best_streak << delim << streak;
     Log() << "habit serialized: " << ss.str();
     return ss.str();
 }
 
 Habit Habit::deserialize(const std::string& s) {
-    validate_serialized_data(s,DELIM,8);
+    validate_serialized_data(s, DELIM, 8);
     Log() << "habit to deserialize: " << s;
-    auto v = split(s, ";", false);
-    v[0].erase(0,1); //remove DELIM
+    auto v = split(s, ";", true); //even if there are no check-ins, it's valid
+    v[0].erase(0, 1); //remove DELIM
     auto ci_svec = split(v[4], ",", false);
     std::set<DateTime> check_ins;
     for (const auto& el: ci_svec) //TODO: Find a suitable std:: algorithm
@@ -85,6 +87,8 @@ std::string Activity::serialize() const {
         delim = ',';
     }
     delim = ';';
+    if (time_elapsed.empty())
+        ss << delim; //empty is valid
     ss << delim << total_time << delim << benefit_multiplier;
     return ss.str();
 }
@@ -93,7 +97,7 @@ std::string Activity::serialize() const {
 Activity Activity::deserialize(const std::string& s) {
     validate_serialized_data(s, DELIM, 7);
     Log() << "activity to deserialize: " << s;
-    auto v = split(s, ";", false);
+    auto v = split(s, ";", true);
     v[0].erase(0,1); //remove DELIM
     auto te_svec = split(v[4], ",", false);
     std::set<DateTime> time_elapsed;
@@ -134,7 +138,6 @@ Goal Goal::deserialize(const std::string& s) {
     Log() << "goal to deserialize: " << s;
     auto v = split(s, ";", true);
     v[0].erase(0, 1);
-    Log() << "v[0]: " << v[0];
     return Goal(stoid(v[0]), //id
                 v[1], //name
                 std::stod(v[2]), //cost

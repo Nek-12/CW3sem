@@ -21,5 +21,10 @@ int main(int, const char**) {
     d.a.push_back(Activity(gen_id(), "Study", 15));
     d.g.push_back(Goal(gen_id(), "Get 10 on CW", 60));
     d.save();
+    wait(1000);
+    d.load();
+    wait(1000);
+    d.save();
+    wait(1000);
     return EXIT_SUCCESS;
 }

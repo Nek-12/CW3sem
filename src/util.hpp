@@ -29,7 +29,7 @@ enum CHECK {
 };
 
 std::vector<std::string> split(const std::string& s, const std::string& delims,
-        bool empty_tokens_allowed = true);
+                               bool empty_tokens_allowed = true);
 
 void ensure_file_exists(const std::string& f);
 
@@ -37,6 +37,8 @@ void ensure_file_exists(const std::string& f);
 std::string lowercase(const std::string&);
 
 std::string hash(const std::string& s);
+
+void wait(int ms);
 
 id_type gen_id();
 

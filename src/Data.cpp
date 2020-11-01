@@ -47,7 +47,7 @@ void Data::load() {
     while (f) {
         std::getline(f, s);
         Log() << "Got line: " << s;
-        if (s.empty()) throw std::runtime_error("blank line in a file");
+        if (s.empty()) continue;
         switch (s[0]) {
             case Habit::DELIM:
                 h.push_back(Habit::deserialize(s));

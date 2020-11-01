@@ -6,7 +6,12 @@
 #include <filesystem>
 #include <random>
 #include <cstddef>
+#include <thread>
+#include <chrono>
 
+void wait(int ms) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+}
 
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
         R"((\d{4})([-. /])(\d{1,2})([-. /])(\d{1,2})(\s|T)(\d{2})([-:])(\d{2})([-:])(\d{2}))"};
