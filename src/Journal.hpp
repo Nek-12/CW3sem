@@ -1,7 +1,3 @@
-//
-// Created by nek on 2020-10-05.
-//
-
 #pragma once
 #include "util.hpp"
 #include <algorithm>

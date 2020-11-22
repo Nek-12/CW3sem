@@ -1,7 +1,3 @@
-//
-// Created by nek on 2020-10-12.
-//
-
 #include "Data.hpp"
 #include<filesystem>
 #include "util.hpp"

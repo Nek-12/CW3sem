@@ -1,7 +1,3 @@
-//
-// Created by nek on 2020-10-12.
-//
-
 #pragma once
 
 #include "Journal.hpp"
