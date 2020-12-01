@@ -6,8 +6,14 @@ namespace CONST {
     template<size_t T>
     using svarr = typename std::array<sv, T>;
 
+    static constexpr int WAIT_TIME = 700;
     static constexpr sv ANY_KEY = "Press any key to continue... ";
     static constexpr sv WELCOME_STR = "Welcome to SOMeter CLI alpha. Use arrow keys to navigate.";
+    static constexpr sv ENTER_LOGIN = "Enter your login or \"exit\" to go back: ";
+    static constexpr sv ENTER_PASS = "Enter your password: ";
+    static constexpr sv INVALID_PASS = "Invalid password.";
+    static constexpr sv CONFIRM_PASS = "Please confirm your password: ";
+    static constexpr sv PASS_DONT_MATCH = "Your passwords don't match!. ";
     static constexpr svarr<2> START_MENU{"Log in", "Exit"};
     static constexpr svarr<5> MAIN_MENU{"Habits", "Activities", "Goals", "Search", "Log out"};
     static constexpr svarr<4> ENTRY_MENU{"Select", "View summary", "New", "Go Back"};

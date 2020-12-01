@@ -11,13 +11,15 @@ bool Data::attempt_login(const std::string& login, const std::string& pass) {
     std::ifstream f(login + ".txt");
     std::string phash;
     std::getline(f, phash);
+    Log() << "Read " << phash << " as a password for " << login;
     if (phash == hash(pass)) {
         this->login = login;
-        this->hashed_pass = hash(pass);
+        this->hashed_pass = phash;
     }
-    return false;
+    return true;
 }
 
+//automatically logs the user in
 void Data::create_user(const std::string& l, const std::string& p) {
     if (user_exists(l)) throw std::invalid_argument("such user already exists");
     std::ofstream f(l + ".txt");

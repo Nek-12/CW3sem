@@ -33,6 +33,10 @@ public:
 
     void set_pass(const std::string& p) { hashed_pass = hash(p); }
 
+    [[nodiscard]] const std::string& get_login() const {
+        return login;
+    }
+
     //TODO: There should be a way around this horribleness.
     // After a decade of thinking hard, I couldn't find any.
     Journal<Habit> h; //NOLINT

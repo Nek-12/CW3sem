@@ -1,4 +1,5 @@
 #pragma once
+
 #include "util.hpp"
 #include <algorithm>
 #include <numeric>
@@ -7,16 +8,17 @@
 template<typename T>
 class Journal {
 public:
-    void sort(bool(*ref)(const T&, const T&)) {
-        std::sort(v.begin(),v.end(), ref);
+    void sort(bool(* bi_predicate)(const T&, const T&)) {
+        std::sort(v.begin(), v.end(), bi_predicate);
     }
 
     [[nodiscard]] double total_points() const {
-        return std::accumulate(v.begin(),v.end(),0,[](const double& lhs, const T& rhs){return lhs + rhs.points();});
+        return std::accumulate(v.begin(), v.end(), 0,
+                               [](const double& lhs, const T& rhs) { return lhs + rhs.points(); });
     }
 
     [[nodiscard]] double avg_points() const {
-        return total_points()/v.size();
+        return total_points() / v.size();
     }
 
     [[nodiscard]] size_t size() const {
@@ -78,6 +80,36 @@ public:
     auto end() const {
         return v.end();
     }
+
+    //returns indices of all entries matching a pattern
+    std::vector<size_t> find(const std::string& substr) {
+        std::vector<size_t> ret;
+        for (auto it = v.begin(); it != v.end(); ++it)
+            if (it->serialize().find(substr) != std::string::npos)
+                ret.push_back(it);
+        return ret;
+    }
+
+    //returns indices of all entries before or after the selected date (inclusive)
+    std::vector<size_t> find(const DateTime& created, bool before) {
+        std::vector<size_t> ret;
+        if (before) {
+            for (auto it = v.begin(); it != v.end(); ++it)
+                if (it->get_created() <= created)
+                    ret.emplace_back(it);
+        } else {
+            for (auto it = v.begin(); it != v.end(); ++it)
+                if (it->get_created() >= created)
+                    ret.emplace_back(it);
+        }
+        return ret;
+    }
+
+    //returns an entry with a matching id, returns j.end() if no such entry exists;
+    typename std::vector<T>::iterator find(id_type id) {
+        return std::find_if(v.begin(), v.end(), [id](const T& el) { return el.get_id() == id; });
+    }
+
 
 private:
     std::vector<T> v;

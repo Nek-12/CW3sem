@@ -5,6 +5,7 @@
 #include <utility>
 
 class Entry {
+
 public:
     explicit Entry(id_type id, std::string name, double cost) : id(id), name(std::move(name)), cost(cost) {
         created = DateTime::get_current();

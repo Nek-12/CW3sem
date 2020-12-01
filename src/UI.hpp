@@ -34,25 +34,45 @@ namespace color {
 // distributed version control system) as declared in the file
 // `git/color.h`.
     MAKE_COLOR_MANIPULATOR(normal, "")
+
     MAKE_COLOR_MANIPULATOR(reset, "\033[m")
+
     MAKE_COLOR_MANIPULATOR(bold, "\033[1m")
+
     MAKE_COLOR_MANIPULATOR(red, "\033[31m")
+
     MAKE_COLOR_MANIPULATOR(green, "\033[32m")
+
     MAKE_COLOR_MANIPULATOR(yellow, "\033[33m")
+
     MAKE_COLOR_MANIPULATOR(blue, "\033[34m")
+
     MAKE_COLOR_MANIPULATOR(magenta, "\033[35m")
+
     MAKE_COLOR_MANIPULATOR(cyan, "\033[36m")
+
     MAKE_COLOR_MANIPULATOR(bold_red, "\033[1;31m")
+
     MAKE_COLOR_MANIPULATOR(bold_green, "\033[1;32m")
+
     MAKE_COLOR_MANIPULATOR(bold_yellow, "\033[1;33m")
+
     MAKE_COLOR_MANIPULATOR(bold_blue, "\033[1;34m")
+
     MAKE_COLOR_MANIPULATOR(bold_magenta, "\033[1;35m")
+
     MAKE_COLOR_MANIPULATOR(bold_cyan, "\033[1;36m")
+
     MAKE_COLOR_MANIPULATOR(bg_red, "\033[41m")
+
     MAKE_COLOR_MANIPULATOR(bg_green, "\033[42m")
+
     MAKE_COLOR_MANIPULATOR(bg_yellow, "\033[43m")
+
     MAKE_COLOR_MANIPULATOR(bg_blue, "\033[44m")
+
     MAKE_COLOR_MANIPULATOR(bg_magenta, "\033[45m")
+
     MAKE_COLOR_MANIPULATOR(bg_cyan, "\033[46m")
 
 } // namespace color
@@ -96,6 +116,7 @@ public:
             t << fort::endr; //end the row
         } //for each entry
         return t.to_string();
+    }
 
     template<size_t C>
     static std::string as_table(const Entry& e, CONST::svarr<C> headers) {
@@ -164,7 +185,39 @@ public:
         getch();
     }
 
-    static inline void cls() { system(std::string(CLS).c_str()); } //NOLINT
+    template<typename Printable>
+    static std::string read_string(const Printable& msg, CHECK mode) {
+        while (true) {
+            cls();
+            std::cout << msg << '\n';
+            std::string s;
+            if (mode == CHECK::PASS)
+                s = get_password();
+            else
+                std::getline(std::cin, s);
+            std::pair<bool, std::string> res = check_string(s, mode);
+            if (!res.first)
+                std::cerr << res.second << "\n Try again. \n";
+            wait(CONST::WAIT_TIME);
+            return s;
+        }
+    }
+
+    static bool yes_no(const std::string& msg) { // Asks for confirmation
+        std::cout << msg << " y/n" << std::endl;
+        while (true) {
+            switch (tolower(getch())) {
+                case 'y':
+                    return true;
+                case 'n':
+                    return false;
+                default:
+                    break;
+            }
+        }
+    }
+
+    static void cls() { system(std::string(CLS).c_str()); } //NOLINT
 
     static std::string get_password();
 };
