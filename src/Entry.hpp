@@ -39,9 +39,6 @@ private:
     DateTime created;
 };
 
-
-//TODO: the ability to undo a check-in
-
 class Habit : public Entry {
 public:
     Habit(id_type id, const std::string& name, double cost) : Entry(id, name, cost) {}

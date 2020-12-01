@@ -95,8 +95,7 @@ public:
                 t << substr;
             t << fort::endr; //end the row
         } //for each entry
-        return t.to_string(); //TODO:Test
-    }
+        return t.to_string();
 
     template<size_t C>
     static std::string as_table(const Entry& e, CONST::svarr<C> headers) {
