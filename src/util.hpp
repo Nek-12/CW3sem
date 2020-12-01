@@ -30,6 +30,8 @@ void ensure_file_exists(const std::string& f);
 
 std::string lowercase(const std::string&);
 
+bool stob(const std::string& b);
+
 std::string hash(const std::string& s);
 
 void wait(int ms);

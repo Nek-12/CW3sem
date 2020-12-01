@@ -34,13 +34,15 @@ void Data::save() {
       << g.serialize();
 }
 
-void Data::load() {
+void Data::load() try {
     if (login.empty() || hashed_pass.empty()) throw std::runtime_error("not logged in");
     std::ifstream f(login + ".txt");
     Log() << "Loading file " << login;
     std::string s;
+    size_t line = 1;
     std::getline(f, s); //skip 1 line
     while (f) {
+        ++line;
         std::getline(f, s);
         Log() << "Got line: " << s;
         if (s.empty()) continue;
@@ -59,4 +61,7 @@ void Data::load() {
         }
     }
     Log() << "Finished loading: " << login << ".txt";
+} catch (std::exception& e) {
+    std::cerr << "Invalid data in the file " << login << ".txt\n" << e.what() << std::endl;
+    throw e;
 }

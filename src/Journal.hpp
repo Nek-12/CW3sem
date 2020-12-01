@@ -2,6 +2,7 @@
 #include "util.hpp"
 #include <algorithm>
 #include <numeric>
+#include "CONST.hpp"
 
 template<typename T>
 class Journal {
@@ -54,9 +55,28 @@ public:
         return ss.str();
     }
 
-//TODO: Bad style?..
-    const std::vector<T>& get_v() const {
-        return v;
+
+    auto as_names() -> std::vector<std::string_view> {
+        std::vector<std::string_view> ret;
+        for (const auto& el: v)
+            ret.emplace_back(el.get_name());
+        return ret;
+    }
+
+    auto begin() {
+        return v.begin();
+    }
+
+    auto end() {
+        return v.end();
+    }
+
+    auto begin() const {
+        return v.begin();
+    }
+
+    auto end() const {
+        return v.end();
     }
 
 private:

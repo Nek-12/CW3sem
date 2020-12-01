@@ -36,7 +36,7 @@ std::string Habit::serialize() const {
     delim = ';';
     if (check_ins.empty())
         ss << delim; //empty value
-    ss << delim << archived << delim << best_streak << delim << streak;
+    ss << delim << std::boolalpha << archived << delim << best_streak << delim << streak;
     Log() << "habit serialized: " << ss.str();
     return ss.str();
 }
@@ -56,7 +56,7 @@ Habit Habit::deserialize(const std::string& s) {
                  std::stod(v[2]), //cost
                  DateTime::deserialize(v[3], DateTime::PAST), //created
                  check_ins, //check_ins set
-                 std::stoi(v[5]), //archived
+                 stob(v[5]), //archived
                  std::stoi(v[6]), //best streak
                  std::stoi(v[7])); //streak
 }
@@ -139,7 +139,7 @@ Goal Goal::deserialize(const std::string& s) {
                 v[1], //name
                 std::stod(v[2]), //cost
                 DateTime::deserialize(v[3], DateTime::PAST), //created
-                std::stoi(v[4]), //completed
+                stob(v[4]), //completed
                 DateTime::deserialize(v[5], DateTime::ANY), //est_length
                 DateTime::deserialize(v[6], DateTime::ANY)); //deadline
 }
@@ -151,7 +151,7 @@ double Goal::points() const {
 std::string Goal::serialize() const {
     std::stringstream ss;
     char delim = ';';
-    ss << DELIM << Entry::serialize() << delim
+    ss << DELIM << Entry::serialize() << delim << std::boolalpha
     << completed << delim << est_length << delim << deadline;
     return ss.str();
 }
