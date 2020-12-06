@@ -37,8 +37,17 @@ public:
         return login;
     }
 
-    //TODO: There should be a way around this horribleness.
-    // After a decade of thinking hard, I couldn't find any.
+    //search everything for a selected string
+    std::vector<Entry*> find(const std::string& s);
+
+    std::vector<Entry*> find(const DateTime& dt, bool before);
+
+    bool erase(const Habit& val);
+
+    bool erase(const Goal& val);
+
+    bool erase(const Activity& val);
+
     Journal<Habit> h; //NOLINT
     Journal<Goal> g; //NOLINT
     Journal<Activity> a; //NOLINT

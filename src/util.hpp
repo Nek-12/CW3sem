@@ -20,7 +20,8 @@ enum class CHECK {
     BOOL = 'b',
     FLOAT = 'f',
     ID = 'i',
-    YEAR = 'y'
+    YEAR = 'y',
+    DATE = 'd',
 };
 
 std::vector<std::string> split(const std::string& s, const std::string& delims,

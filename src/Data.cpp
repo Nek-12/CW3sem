@@ -67,3 +67,61 @@ void Data::load() try {
     std::cerr << "Invalid data in the file " << login << ".txt\n" << e.what() << std::endl;
     throw e;
 }
+
+std::vector<Entry*> Data::find(const std::string& s) {
+    std::vector<Entry*> ret;
+    auto vph = h.find(s);
+    auto vpa = g.find(s);
+    auto vpg = a.find(s);
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vph.begin()),
+            std::make_move_iterator(vph.end())
+    );
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vpa.begin()),
+            std::make_move_iterator(vpa.end())
+    );
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vpg.begin()),
+            std::make_move_iterator(vpg.end())
+    );
+    return ret;
+}
+
+std::vector<Entry*> Data::find(const DateTime& dt, bool before) {
+    std::vector<Entry*> ret;
+    auto vph = h.find(dt, before);
+    auto vpa = g.find(dt, before);
+    auto vpg = a.find(dt, before);
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vph.begin()),
+            std::make_move_iterator(vph.end())
+    );
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vpa.begin()),
+            std::make_move_iterator(vpa.end())
+    );
+    ret.insert(
+            ret.end(),
+            std::make_move_iterator(vpg.begin()),
+            std::make_move_iterator(vpg.end())
+    );
+    return ret;
+}
+
+bool Data::erase(const Habit& val) {
+    return h.erase(val);
+}
+
+bool Data::erase(const Activity& val) {
+    return a.erase(val);
+}
+
+bool Data::erase(const Goal& val) {
+    return g.erase(val);
+}

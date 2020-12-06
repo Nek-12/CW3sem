@@ -151,6 +151,8 @@ public:
 
     [[nodiscard]] double to_y_approx() const;
 
+    static DateTime from_stream(const std::istream& is);
+
 private:
     int y = 0;
     int mon = 0;

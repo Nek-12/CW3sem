@@ -3,6 +3,7 @@
 #include "util.hpp"
 #include <algorithm>
 #include <numeric>
+#include <set>
 #include "CONST.hpp"
 
 template<typename T>
@@ -50,6 +51,10 @@ public:
         v.erase(v.begin + pos);
     }
 
+    void erase(typename std::vector<T>::iterator it) {
+        v.erase(it);
+    }
+
     std::string serialize() {
         std::stringstream ss;
         for (const auto& e: v)
@@ -81,38 +86,47 @@ public:
         return v.end();
     }
 
-    //returns indices of all entries matching a pattern
-    std::vector<size_t> find(const std::string& substr) {
-        std::vector<size_t> ret;
+    //returns pointers to all entries matching a pattern
+    std::vector<T*> find(const std::string& name) {
+        std::vector<T*> ret;
         for (auto it = v.begin(); it != v.end(); ++it)
-            if (it->serialize().find(substr) != std::string::npos)
-                ret.push_back(it);
+            if (it->get_name().find(name) != std::string::npos)
+                ret.push_back(&(*it));
         return ret;
     }
 
-    //returns indices of all entries before or after the selected date (inclusive)
-    std::vector<size_t> find(const DateTime& created, bool before) {
-        std::vector<size_t> ret;
+    //returns pointers to all entries before or after the selected date (inclusive)
+    std::vector<T*> find(const DateTime& created, bool before) {
+        std::vector<T*> ret;
         if (before) {
             for (auto it = v.begin(); it != v.end(); ++it)
                 if (it->get_created() <= created)
-                    ret.emplace_back(it);
+                    ret.push_back(&(*it));
         } else {
             for (auto it = v.begin(); it != v.end(); ++it)
                 if (it->get_created() >= created)
-                    ret.emplace_back(it);
+                    ret.push_back(&(*it));
         }
         return ret;
     }
 
     //returns an entry with a matching id, returns j.end() if no such entry exists;
-    typename std::vector<T>::iterator find(id_type id) {
-        return std::find_if(v.begin(), v.end(), [id](const T& el) { return el.get_id() == id; });
+    typename std::vector<T>::iterator obtain(id_type id) {
+        return std::find(v.begin(), v.end(), [id](const T& el) { return el.get_id() == id; });
+    }
+
+    bool erase(const T& val) {
+        auto it = std::find(v.begin(), v.end(), val);
+        if (it == v.end())
+            return false;
+        v.erase(it);
+        return true;
     }
 
 
 private:
     std::vector<T> v;
 };
+
 
 

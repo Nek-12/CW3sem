@@ -101,18 +101,28 @@ class UI {
         return vec;
     }
 
+    static std::vector<std::string> to_readable_form(const Entry* pe) {
+        return to_readable_form(*pe);
+    }
+
 public:
-    template<typename T, size_t C>
-    static std::string as_table(const Journal<T>& j, CONST::svarr<C> headers) {
+    template<typename T, typename Iterable, size_t C>
+    static std::string as_table(const Iterable& j, CONST::svarr<C> headers) {
         fort::char_table t;
+        int no = 0;
         t << fort::header;
+        t << "#"; //add a number column
         for (const auto& el: headers)
-            t << el;
+            t << el; //add other columns
         t << fort::endr;
         for (const auto& el: j) { //for each entry
             auto vec = to_readable_form(el);
-            for (const auto& substr: vec)
-                t << substr;
+            t << ++no; //add a number
+            for (size_t i = 0; i < headers.size(); ++i)
+                //display only those entries that we need
+                //entries are specified by headers, so we'll skip all the unnecessary data
+                //when using this function template with different data types
+                t << vec[i];
             t << fort::endr; //end the row
         } //for each entry
         return t.to_string();
@@ -131,11 +141,11 @@ public:
         return t.to_string();
     }
 
-    //returns a value from 0 to list.end()-1 based on what the user selects
-    template<typename T = std::string, typename V>
-    static size_t select_entry(const V& list,
-                               const T& pre_data = "",
-                               const T& post_data = "") {
+    //returns a value in range [ 0, list.size() ) based on what the user selects
+    template<typename Iterable>
+    static size_t select_entry(const Iterable& list,
+                               const std::string& pre_data = "",
+                               const std::string& post_data = "") {
         size_t selected = 0;
         int c = 0;
         do {
@@ -164,7 +174,12 @@ public:
     }
 
     template<typename T>
-    static void print(const T& list, size_t selected = 0) {
+    static T& select_from(const Journal<T>& j) {
+        return j[select_entry(j.as_names())];
+    }
+
+    template<typename Iterable>
+    static void print(const Iterable& list, size_t selected = 0) {
         size_t max_len = 0;
         for (const auto& el: list)
             if (el.size() > max_len)
@@ -178,6 +193,13 @@ public:
         std::cout << std::endl;
     }
 
+    static void print(const std::vector<Entry*>& vec, size_t selected = 0) {
+        std::vector<std::string> name_vec;
+        for (auto* el : vec)
+            name_vec.push_back(el->get_name());
+        print(name_vec, selected);
+    }
+
     static int getch();
 
     static inline void pause() {
@@ -186,7 +208,7 @@ public:
     }
 
     template<typename Printable>
-    static std::string read_string(const Printable& msg, CHECK mode) {
+    static std::string get_string(const Printable& msg, CHECK mode) {
         while (true) {
             cls();
             std::cout << msg << '\n';
@@ -220,6 +242,36 @@ public:
     static void cls() { system(std::string(CLS).c_str()); } //NOLINT
 
     static std::string get_password();
+
+    static DateTime get_datetime() {
+        while (true) {
+            try {
+                cls();
+                std::cout << "Enter the date in the format: \n"
+                             "YYYY-MM-DD HH:MM:SS\n";
+                return DateTime::from_stream(std::cin);
+            } catch (std::invalid_argument& e) {
+                std::cout << "Try again: " << e.what() << std::endl;
+                wait(CONST::WAIT_TIME);
+                continue;
+            }
+        }
+    }
+
+    static id_type get_number_in_range(id_type min, id_type max) {
+        std::stringstream ss;
+        ss << "Enter the number from " << min << " to " << max;
+        while (true) {
+            id_type no = stoid(get_string(ss.str(), CHECK::ID));
+            if (no > max || no < min) {
+                std::cerr << "Wrong value, try again\n";
+                wait(CONST::WAIT_TIME);
+                continue;
+            }
+            return no;
+        }
+    }
+
 };
 
 

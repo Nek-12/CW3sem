@@ -22,13 +22,14 @@ namespace CONST {
     static constexpr svarr<6> ACTIVITY_MENU{"Summary", "Edit", "Delete", "Add time", "Change multiplier", "Go back"};
     static constexpr svarr<7> HABIT_MENU{"Summary", "Edit", "Delete", "Mark completed", "Archive", "History",
                                          "Go back"};
-    static constexpr svarr<3> SEARCH_MENU{"Search by name", "Filter by date", "Go back"};
+    static constexpr svarr<3> SEARCH_MENU{"Search", "Filter by date", "Go back"};
     static constexpr double ACTIVITY_MULTIPLIER_PER_HOUR = 1.0;
     static constexpr svarr<6> HEADERS_ACTIVITY{"Name", "Cost", "Created", "Time elapsed", "Total time",
                                                "Benefit multiplier"};
     static constexpr svarr<6> HEADERS_GOAL{"Name", "Cost", "Created", "Completed", "Est. Length", "Deadline"};
     static constexpr svarr<7> HEADERS_HABIT{"Name", "Cost", "Created", "Check-ins", "Is archived?", "Best streak",
                                             "Streak"};
+    static constexpr svarr<8>
 } //namespace CONST
 
 

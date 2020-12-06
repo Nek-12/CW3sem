@@ -208,3 +208,9 @@ int DateTime::operator[](int n) const {
             throw std::invalid_argument("Subscript out of range");
     }
 }
+
+DateTime DateTime::from_stream(const std::istream& is) {
+    std::string s;
+    std::getline(is, s);
+    return DateTime::deserialize(s);
+}

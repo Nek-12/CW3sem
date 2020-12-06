@@ -9,8 +9,25 @@ std::string Entry::serialize() const {
 }
 
 void Entry::validate_serialized_data(const std::string& s, char delimiter, int num_fields) {
-    if (s.empty() || s.at(0) != delimiter || std::count(s.begin(),s.end(),';') != num_fields-1) //one ; less
+    if (s.empty() || s.at(0) != delimiter || std::count(s.begin(), s.end(), ';') != num_fields - 1) //one ; less
         throw std::invalid_argument("attempted to deserialize " + s);
+}
+
+bool Entry::operator==(const Entry& rhs) const {
+    return id == rhs.id;
+}
+
+bool Entry::operator!=(const Entry& rhs) const {
+    return !(rhs == *this);
+}
+
+std::string Entry::summary() const {
+    std::stringstream ss;
+    Log() << "name: " << name << "id: " << id
+          << "Title: " << name << '\n'
+          << "Cost: " << cost << " points\n"
+          << "Created at " << created << '\n';
+    return ss.str();
 }
 
 //////////////////HABIT/////////////////////
@@ -19,7 +36,7 @@ double Habit::points() const {
     //multiply base cost with percentage of completion
     // 1 + check-ins / (difference between days completed and days the habit exists)
     // coefficient will always be >1
-    double a = ( 1 + check_ins.size() / (DateTime::get_current() - get_created()).to_d_approx());
+    double a = (1 + check_ins.size() / (DateTime::get_current() - get_created()).to_d_approx());
     Log() << "Points multiplier of " << get_name() << ": " << a;
 
     return get_cost() * a + streak;
@@ -67,6 +84,22 @@ void Habit::check_in() {
     if (best_streak < ++streak) best_streak = streak;
 }
 
+std::string Habit::summary() const {
+    std::stringstream ss;
+    ss << Entry::summary()
+       << (archived ? "Is " : "Isn't ") << " archived\n"
+       << "Best streak: " << best_streak << " days\n"
+       << "Current streak: " << streak << " days\n"
+       << "Check ins: ";
+    std::string delim = "\n";
+    for (const auto& el: check_ins) {
+        ss << delim << el;
+        delim = ", \n";
+    }
+    ss << '\n';
+    return ss.str();
+}
+
 /////////////////////ACTIVITY/////////////////////////
 
 /*
@@ -95,7 +128,7 @@ Activity Activity::deserialize(const std::string& s) {
     validate_serialized_data(s, DELIM, 7);
     Log() << "activity to deserialize: " << s;
     auto v = split(s, ";", true);
-    v[0].erase(0,1); //remove DELIM
+    v[0].erase(0, 1); //remove DELIM
     auto te_svec = split(v[4], ",", false);
     std::set<DateTime> time_elapsed;
     for (const auto& el: te_svec) //TODO: Find a suitable std:: algorithm
@@ -106,19 +139,35 @@ Activity Activity::deserialize(const std::string& s) {
                     std::stod(v[2]), //cost
                     DateTime::deserialize(v[3], DateTime::PAST), //created
                     time_elapsed, //time_elapsed set
-                    DateTime::deserialize(v[5],DateTime::ANY),  //total_time
+                    DateTime::deserialize(v[5], DateTime::ANY),  //total_time
                     std::stod(v[6])); //benefit_multiplier
 }
 
 double Activity::points() const {
-    double a = ( 1 + (total_time.to_h_approx() * CONST::ACTIVITY_MULTIPLIER_PER_HOUR / (DateTime::get_current() - get_created()).to_h_approx() ));
+    double a = (1 + (total_time.to_h_approx() * CONST::ACTIVITY_MULTIPLIER_PER_HOUR /
+                     (DateTime::get_current() - get_created()).to_h_approx()));
     Log() << "Points multiplier of " << get_name() << ": " << a;
     return get_cost() * benefit_multiplier * a;
 }
 
 void Activity::add_time(const DateTime& dt) {
     time_elapsed.insert(dt);
-    total_time+=dt;
+    total_time += dt;
+}
+
+std::string Activity::summary() const {
+    std::stringstream ss;
+    ss << Entry::summary()
+       << "Point multiplier: x" << benefit_multiplier << "\n"
+       << "Total time spent on the activity: " << total_time << "\n"
+       << "Elapsed time records: ";
+    std::string delim = "\n";
+    for (const auto& el: time_elapsed) {
+        ss << delim << el;
+        delim = ", \n";
+    }
+    ss << '\n';
+    return ss.str();
 }
 
 
@@ -145,13 +194,22 @@ Goal Goal::deserialize(const std::string& s) {
 }
 
 double Goal::points() const {
-    return (get_cost() + est_length.to_h_approx())*completed;
+    return (get_cost() + est_length.to_h_approx()) * completed;
 }
 
 std::string Goal::serialize() const {
     std::stringstream ss;
     char delim = ';';
     ss << DELIM << Entry::serialize() << delim << std::boolalpha
-    << completed << delim << est_length << delim << deadline;
+       << completed << delim << est_length << delim << deadline;
+    return ss.str();
+}
+
+std::string Goal::summary() const {
+    std::stringstream ss;
+    ss << Entry::summary()
+       << (completed ? "Is" : "Is not") << " completed\n"
+       << "Estimated length: " << est_length << "\n"
+       << "Deadline at: " << deadline << "\n";
     return ss.str();
 }

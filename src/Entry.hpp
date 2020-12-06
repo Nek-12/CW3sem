@@ -5,6 +5,10 @@
 #include <utility>
 
 class Entry {
+public:
+    bool operator==(const Entry& rhs) const;
+
+    bool operator!=(const Entry& rhs) const;
 
 public:
     explicit Entry(id_type id, std::string name, double cost) : id(id), name(std::move(name)), cost(cost) {
@@ -15,6 +19,8 @@ public:
             name)), cost(cost), created(created) {}
 
     [[nodiscard]] virtual double points() const = 0;
+
+    [[nodiscard]] virtual std::string summary() const;
 
     [[nodiscard]] virtual std::string serialize() const;
 
@@ -70,8 +76,10 @@ public:
 
     [[nodiscard]] auto get_check_ins() const { return check_ins; }
 
+    [[nodiscard]] std::string summary() const override;
+
 private:
-    //automatically sorted
+    //automatically sorted by date
     std::set<DateTime> check_ins; //when did we mark this habit as complete?
     bool archived = false;
     int best_streak = 0;
@@ -87,6 +95,7 @@ public:
             Entry(id, name, cost, created), time_elapsed(std::move(time_elapsed)),
             total_time(total_time), benefit_multiplier(benefit_multiplier) {}
 
+    std::string summary() const override;
 
     static Activity deserialize(const std::string& s);
 
@@ -98,7 +107,7 @@ public:
 
     [[nodiscard]] DateTime get_total_time() const { return total_time; }
 
-    double get_benefit_multiplier() const { return benefit_multiplier; }
+    [[nodiscard]] double get_benefit_multiplier() const { return benefit_multiplier; }
 
     void set_benefit_multiplier(double multiplier) { benefit_multiplier = multiplier; }
 
@@ -119,6 +128,8 @@ public:
 
     static Goal deserialize(const std::string& s);
 
+    std::string summary() const override;
+
     [[nodiscard]] double points() const override;
 
     [[nodiscard]] std::string serialize() const override;
@@ -129,11 +140,11 @@ public:
 
     [[nodiscard]] const DateTime& get_est_length() const { return est_length; }
 
-    void set_est_length(const DateTime& est_length) { Goal::est_length = est_length; }
+    void set_est_length(const DateTime& length) { Goal::est_length = length; }
 
     [[nodiscard]] const DateTime& get_deadline() const { return deadline; }
 
-    void set_deadline(const DateTime& deadline) { Goal::deadline = deadline; }
+    void set_deadline(const DateTime& dt) { Goal::deadline = dt; }
 
     DateTime time_left() { return deadline - DateTime::get_current(); }
 
