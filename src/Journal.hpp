@@ -63,7 +63,7 @@ public:
     }
 
 
-    auto as_names() -> std::vector<std::string_view> {
+    [[nodiscard]] auto as_names() const -> std::vector<std::string_view> {
         std::vector<std::string_view> ret;
         for (const auto& el: v)
             ret.emplace_back(el.get_name());

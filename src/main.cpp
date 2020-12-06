@@ -155,12 +155,16 @@ void main_menu() {
         switch (UI::select_entry(MAIN_MENU, std::string(WELCOME_STR))) {
             case 0:
                 habit_menu(UI::select_from(d.h));
+                break;
             case 1:
                 activity_menu(UI::select_from(d.a));
+                break;
             case 2:
                 goal_menu(UI::select_from(d.g));
+                break;
             case 3:
                 search_entry();
+                break;
             case 4:
                 return;
             default:
@@ -199,6 +203,8 @@ void log_in() {
                 continue;
             }
             //user does not exist
+            std::cout << color::yellow << "Account " << l << " was not found... \n"
+                      << color::reset;
             if (UI::yes_no("Create a new account?")) {
                 p = create_account(l);
                 d.create_user(l, p);

@@ -29,7 +29,6 @@ namespace CONST {
     static constexpr svarr<6> HEADERS_GOAL{"Name", "Cost", "Created", "Completed", "Est. Length", "Deadline"};
     static constexpr svarr<7> HEADERS_HABIT{"Name", "Cost", "Created", "Check-ins", "Is archived?", "Best streak",
                                             "Streak"};
-    static constexpr svarr<8>
 } //namespace CONST
 
 

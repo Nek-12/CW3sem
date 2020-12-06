@@ -6,17 +6,18 @@ bool Data::user_exists(const std::string& login) {
     return std::filesystem::exists(login + ".txt");
 }
 
-bool Data::attempt_login(const std::string& login, const std::string& pass) {
-    if (!user_exists(login)) return false;
-    std::ifstream f(login + ".txt");
+bool Data::attempt_login(const std::string& username, const std::string& pass) {
+    if (!user_exists(username)) return false;
+    std::ifstream f(username + ".txt");
     std::string phash;
     std::getline(f, phash);
-    Log() << "Read " << phash << " as a password for " << login;
+    Log() << "Read " << phash << " as a password for " << username;
     if (phash == hash(pass)) {
-        this->login = login;
+        this->login = username;
         this->hashed_pass = phash;
+        return true;
     }
-    return true;
+    return false;
 }
 
 //automatically logs the user in

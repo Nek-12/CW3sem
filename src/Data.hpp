@@ -27,7 +27,7 @@ public:
 
     static bool user_exists(const std::string& login);
 
-    bool attempt_login(const std::string& login, const std::string& pass);
+    bool attempt_login(const std::string& username, const std::string& pass);
 
     void create_user(const std::string& l, const std::string& p);
 

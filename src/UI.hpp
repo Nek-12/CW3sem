@@ -174,7 +174,7 @@ public:
     }
 
     template<typename T>
-    static T& select_from(const Journal<T>& j) {
+    static T& select_from(Journal<T>& j) {
         return j[select_entry(j.as_names())];
     }
 

@@ -209,7 +209,7 @@ int DateTime::operator[](int n) const {
     }
 }
 
-DateTime DateTime::from_stream(const std::istream& is) {
+DateTime DateTime::from_stream(std::istream& is) {
     std::string s;
     std::getline(is, s);
     return DateTime::deserialize(s);
