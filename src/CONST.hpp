@@ -15,7 +15,7 @@ namespace CONST {
     static constexpr sv CONFIRM_PASS = "Please confirm your password: ";
     static constexpr sv PASS_DONT_MATCH = "Your passwords don't match!. ";
     static constexpr svarr<2> START_MENU{"Log in", "Exit"};
-    static constexpr svarr<5> MAIN_MENU{"Habits", "Activities", "Goals", "Search", "Log out"};
+    static constexpr svarr<6> MAIN_MENU{"Summary", "Habits", "Activities", "Goals", "Search", "Log out"};
     static constexpr svarr<7> GOAL_MENU{"Rename", "Change points cost", "Delete", "Toggle completed", "Change duration",
                                         "Set deadline", "Go back"};
     static constexpr svarr<6> ACTIVITY_MENU{"Rename", "Change points cost", "Delete", "Add time", "Change multiplier",

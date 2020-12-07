@@ -50,7 +50,7 @@ bool edit_entry(Entry& e, size_t selected) { //the item must be already selected
 //"Rename", "Change points cost", "Delete", "Mark completed", "Archive/Unarchive", "Go back"
 void habit_menu(Habit& h) {
     while (true) {
-        auto sel = UI::select_entry(HABIT_MENU, " ", h.summary());
+        auto sel = UI::select_entry(HABIT_MENU, "", h.summary());
         switch (sel) {
             case 0:
             case 1:
@@ -85,7 +85,7 @@ void habit_menu(Habit& h) {
 //"Rename", "Change points cost",  "Delete", "Add time", "Change multiplier", "Go back"
 void activity_menu(Activity& a) {
     while (true) {
-        auto sel = UI::select_entry(ACTIVITY_MENU, " ", a.summary());
+        auto sel = UI::select_entry(ACTIVITY_MENU, "", a.summary());
         switch (sel) {
             case 0:
             case 1:
@@ -121,7 +121,7 @@ void activity_menu(Activity& a) {
 //"Rename", "Change points cost",  "Delete", "Toggle", "Change duration", "Set deadline","Go back"
 void goal_menu(Goal& g) {
     while (true) {
-        auto sel = UI::select_entry(GOAL_MENU, g.summary());
+        auto sel = UI::select_entry(GOAL_MENU, "", g.summary());
         switch (sel) {
             case 0:
             case 1:
@@ -223,12 +223,29 @@ void main_menu() {
     auto& d = Data::get();
     auto adder = [](std::vector<std::string_view> vals) {
         vals.emplace_back("+ Add New +");
-        vals.emplace_back(" <- Go back ");
+        vals.emplace_back("<- Go back ");
         return vals;
     };
     while (true) {
         switch (UI::select_entry(MAIN_MENU, std::string(WELCOME_STR))) {
-            case 0: { //habits
+            case 0: {
+                UI::cls();
+                std::cout << "Habits: \n" << UI::as_table(d.h, HEADERS_HABIT) << '\n'
+                          << "Activities: \n" << UI::as_table(d.a, HEADERS_ACTIVITY) << '\n'
+                          << "Goals: \n" << UI::as_table(d.g, HEADERS_GOAL) << '\n'
+                          << color::bold_cyan << "You've got " << d.total_entries() << " entries.\n"
+                          << "Of them " << d.h.size() << " habits, " << d.a.size() << " activities, "
+                          << d.g.size() << " goals.\n"
+                          << "In total you can get " << d.total_points()
+                          << " points for your Goals, Activities and Habits\n"
+                          << "Your best streak on habits is " << d.best_streak() << " days\n"
+                          << "You still have " << d.incomplete_goals() << " goals (" << d.completed_goals()
+                          << " are already completed)\n"
+                          << color::reset << std::endl;
+                UI::pause();
+            }
+                break;
+            case 1: { //habits
                 std::vector<std::string_view> vals = adder(d.h.as_names());
                 size_t selected = UI::select_entry(vals, "", UI::as_table(d.h, HEADERS_HABIT));
                 if (selected == vals.size() - 1) // "go back"
@@ -238,7 +255,7 @@ void main_menu() {
                 else habit_menu(d.h[selected]);
             }
                 break;
-            case 1: { //activities
+            case 2: { //activities
                 auto vals = adder(d.a.as_names());
                 size_t selected = UI::select_entry(vals, "", UI::as_table(d.a, HEADERS_ACTIVITY));
                 if (selected == vals.size() - 1) // "go back"
@@ -248,7 +265,7 @@ void main_menu() {
                 else activity_menu(d.a[selected]);
             }
                 break;
-            case 2: { //activities
+            case 3: { //activities
                 auto vals = adder(d.g.as_names());
                 size_t selected = UI::select_entry(vals, "", UI::as_table(d.g, HEADERS_GOAL));
                 if (selected == vals.size() - 1) // "go back"
@@ -258,10 +275,10 @@ void main_menu() {
                 else goal_menu(d.g[selected]);
             }
                 break;
-            case 3:
+            case 4:
                 search_entry();
                 break;
-            case 4:
+            case 5:
                 return;
             default:
                 break;
@@ -330,7 +347,7 @@ int main(int /*unused*/, const char** /*unused*/) try {
     d.save();
     return EXIT_SUCCESS;
 } catch (std::exception& e) {
-    std::cout << color::red << "Something bad happened: \n" << e.what() << color::reset << std::endl;
+    std::cout << '\a' << color::red << "Something bad happened: \n" << e.what() << color::reset << std::endl;
     Log() << e.what();
     if (UI::yes_no("Attempt to save your data? "))
         Data::get().save();

@@ -25,9 +25,9 @@ bool Entry::operator!=(const Entry& rhs) const {
 std::string Entry::summary() const {
     std::stringstream ss;
     Log() << "Name: " << name << "id: " << id;
-    ss << "Title: " << name << '\n'
+    ss << color::bold_blue << "Title: " << name << '\n'
        << "Cost: " << cost << " points\n"
-       << "Created at " << created.to_printable(true) << '\n';
+       << "Created at " << created.to_printable(true) << color::reset << '\n';
     return ss.str();
 }
 
@@ -81,14 +81,22 @@ Habit Habit::deserialize(const std::string& s) {
 
 bool Habit::check_in() {
     if (archived) return false;
-    check_ins.insert(DateTime::get_current());
-    if (best_streak < ++streak) best_streak = streak;
+    auto cur = DateTime::get_current();
+    if (!check_ins.empty()) { //if it's not the first
+        const DateTime& last = *(--check_ins.end()); //get the last element
+        //if last check in's DAY (2) is one less than today's
+        if (cur[2] == last[2] + 1)
+            ++streak;
+        else streak = 0; //if not, reset the streak :(
+    } else ++streak; //if first, just increment
+    check_ins.insert(cur);
+    if (best_streak < streak) best_streak = streak;
     return true;
 }
 
 std::string Habit::summary() const {
     std::stringstream ss;
-    ss << Entry::summary()
+    ss << Entry::summary() << color::bold_blue
        << (archived ? "Is " : "Isn't ") << " archived\n"
        << "Best streak: " << best_streak << " days\n"
        << "Current streak: " << streak << " days\n"
@@ -98,7 +106,7 @@ std::string Habit::summary() const {
         ss << delim << el;
         delim = ", \n";
     }
-    ss << '\n';
+    ss << color::reset << '\n';
     return ss.str();
 }
 
@@ -159,7 +167,7 @@ void Activity::add_time(const DateTime& dt) {
 
 std::string Activity::summary() const {
     std::stringstream ss;
-    ss << Entry::summary()
+    ss << Entry::summary() << color::bold_blue
        << "Point multiplier: x" << benefit_multiplier << "\n"
        << "Total time spent on the activity: " << total_time.to_duration_printable() << "\n"
        << "Elapsed time records: ";
@@ -168,7 +176,7 @@ std::string Activity::summary() const {
         ss << delim << el;
         delim = ", \n";
     }
-    ss << '\n';
+    ss << color::bold_blue << '\n';
     return ss.str();
 }
 
@@ -207,8 +215,6 @@ std::string Goal::serialize() const {
     return ss.str();
 }
 
-
-//TODO: Colorize the stuff
 std::string Goal::summary() const {
     std::stringstream ss;
     ss << color::bold_blue << Entry::summary()

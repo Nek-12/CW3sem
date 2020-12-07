@@ -130,10 +130,10 @@ bool Data::erase(const Goal& val) {
 //the most general version that uses RTTI (slow)
 bool Data::erase(const Entry& e) {
     if (typeid(e) == typeid(Habit&))
-        return erase(static_cast<const Habit&>(e));
+        return erase(static_cast<const Habit&>(e)); //NOLINT
     if (typeid(e) == typeid(Activity&))
-        return erase(static_cast<const Activity&>(e));
+        return erase(static_cast<const Activity&>(e)); //NOLINT
     if (typeid(e) == typeid(Goal&))
-        return erase(static_cast<const Goal&>(e));
+        return erase(static_cast<const Goal&>(e)); //NOLINT
     throw std::runtime_error("Unknown type encountered");
 } //TODO: test

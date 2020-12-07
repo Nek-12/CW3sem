@@ -156,9 +156,11 @@ public:
         int c = 0; //NOLINT
         do {
             cls();
-            std::cout << pre_data << "\n\n";
+            if (!pre_data.empty())
+                std::cout << pre_data << "\n\n";
             print(list, selected);
-            std::cout << post_data << "\n";
+            if (!post_data.empty())
+                std::cout << post_data << "\n";
             c = getch();
             Log() << "Getch() = " << c;
             if (c == static_cast<int>(KEY::ARROW_1) && getch() == static_cast<int>(KEY::ARROW_2)) {
@@ -174,7 +176,12 @@ public:
                             --selected;
                         else selected = list.size() - 1;
                         break;
+                    case static_cast<int>(KEY::ARROW_RIGHT):
+                        return selected;
+                    case static_cast<int>(KEY::ARROW_LEFT):
+                        return list.size() - 1; //the last on is usually Go back
                     default:
+                        std::cout << '\a'; //beep
                         break;
                 }
             }
@@ -228,6 +235,7 @@ public:
                 std::getline(std::cin, s);
             std::pair<bool, std::string> res = check_string(s, mode);
             if (!res.first) {
+                std::cout << '\a'; //beep
                 std::cout << color::red << res.second << "\nTry again. \n" << color::reset;
                 wait(CONST::WAIT_TIME * 2);
                 continue;
@@ -245,6 +253,7 @@ public:
                 case 'n':
                     return false;
                 default:
+                    std::cout << '\a'; //beep
                     break;
             }
         }
@@ -263,6 +272,7 @@ public:
                 return DateTime::from_stream(std::cin);
             } catch (std::invalid_argument& e) {
                 std::cout << color::red << "Try again: " << e.what() << color::reset << std::endl;
+                std::cout << '\a'; //beep
                 wait(CONST::WAIT_TIME * 2);
             }
         }
@@ -276,7 +286,9 @@ public:
                 s.insert(0, "0000-00-00 ");
                 Log() << "Final string from get_time: " << s;
                 return DateTime::deserialize(s);
-            } catch (std::invalid_argument& e) {}
+            } catch (std::invalid_argument& e) {
+                std::cout << '\a'; //beep
+            }
         }
     }
 
@@ -286,6 +298,7 @@ public:
         while (true) {
             id_type no = stoid(get_string(ss.str(), CHECK::ID));
             if (no > max || no < min) {
+                std::cout << '\a'; //beep
                 std::cout << color::red << "Wrong value, try again\n" << color::reset;
                 wait(CONST::WAIT_TIME);
                 continue;
