@@ -48,6 +48,8 @@ public:
 
     bool erase(const Activity& val);
 
+    bool erase(const Entry& val);
+
     Journal<Habit> h; //NOLINT
     Journal<Goal> g; //NOLINT
     Journal<Activity> a; //NOLINT

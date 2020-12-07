@@ -1,9 +1,9 @@
-#pragma once
 //Copyright Nek.12: vaizin.nikita@gmail.com
+#pragma once
 
 #include <ctime>
-#include <regex>
 #include <iomanip>
+#include <regex>
 
 /* Usage:
 DateTime dt(year,month,day,hour,minute,second) OR
@@ -43,10 +43,60 @@ class DateTime {
 public:
     inline static const double APPROX_MONTH_DURATION_DAYS = 30.4583333;
     inline static const double APPROX_YEAR_DURATION_DAYS = 365.242;
+    static constexpr std::array<std::string_view, 7> WDAYS{
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+            "Monday",
+            "Tuesday"
+    };
+
+    static constexpr std::array<std::string_view, 12> MONTHS{
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+    };
+
+    static constexpr std::array<std::string_view, 7> WDAYS_SHORT{
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun",
+            "Mon",
+            "Tue"
+    };
+
+    static constexpr std::array<std::string_view, 12> MONTHS_SHORT{
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+    };
 
     enum {
         PAST = 1, FUTURE = 0, ANY = -1 //
     };
+
 
     friend DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
         DateTime sum = lhs;
@@ -70,7 +120,7 @@ public:
 
     friend bool operator==(const DateTime& lhs, const DateTime& rhs) {
         return lhs.y == rhs.y && lhs.mon == rhs.mon && lhs.d == rhs.d &&
-               lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
+                lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
     }
 
     friend bool operator!=(const DateTime& lhs, const DateTime& rhs) {
@@ -86,7 +136,7 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const DateTime& t) {
-        return os << t.to_string();
+        return os << t.serialize();
     }
 
     //returns a value at a position from 0 to 5, may throw
@@ -116,9 +166,27 @@ public:
 
     [[nodiscard]] std::string to_string() const {
         std::stringstream ss;
-        ss << std::setfill('0') << std::setw(4) << this->y << "." << std::setw(2) << this->mon
-           << "." << std::setw(2) << this->d << " " << std::setw(2) << this->h
-           << ":" << std::setw(2) << this->min << ":" << std::setw(2) << this->s;
+        ss << std::setfill('0') << std::setw(4) << y << "-" << std::setw(2) << mon
+           << "-" << std::setw(2) << d << " " << std::setw(2) << h
+           << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+        return ss.str();
+    }
+
+    [[nodiscard]] std::string to_printable(bool short_date) const {
+        if (incomplete())
+            return "----.--.-- --:--:--";
+        std::stringstream ss;
+        ss << weekday_string(y, mon, d, short_date) << ", "
+           << (short_date ? MONTHS_SHORT.at(mon - 1) : MONTHS.at(mon - 1)) << " " << d << number_postfix(d) << " "
+           << y << ", " << std::setfill('0')
+           << std::setw(2) << h << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+        return ss.str();
+    }
+
+    [[nodiscard]] std::string to_duration_printable() const {
+        std::stringstream ss;
+        ss << y << " years, " << mon << " months, " << d << " days, "
+           << h << " hrs, " << min << " min, " << s << " s. ";
         return ss.str();
     }
 
@@ -153,6 +221,38 @@ public:
 
     static DateTime from_stream(std::istream& is);
 
+    static unsigned get_weekday(int y, int m, int d) {
+        if (y == 0 || m == 0 || d == 0) //unknown
+            return 0;
+        m = (m + 9) % 12;
+        y -= m / 10;
+        return 365 * y + y / 4 - y / 100 + y / 400 + (m * 306 + 5) / 10 + (d - 1);
+    }
+
+    static std::string weekday_string(int y, int m, int d, bool short_str) {
+        if (y == 0 || m == 0 || d == 0)
+            return "-";
+        int val = get_weekday(y, m, d) % 7;
+        return std::string((short_str ? WDAYS_SHORT.at(val) : WDAYS.at(val)));
+    }
+
+    static std::string number_postfix(int num) {
+        switch (std::abs(num)) {
+            case 1:
+                return "st";
+            case 2:
+                return "nd";
+            case 3:
+                return "rd";
+            default:
+                return "th";
+        }
+    }
+
+    [[nodiscard]] bool incomplete() const {
+        return y == 0 || mon == 0 || d == 0;
+    }
+
 private:
     int y = 0;
     int mon = 0;
@@ -162,5 +262,7 @@ private:
     int s = 0;
 
     static const std::regex date_time_regex;
+
+
 };
 

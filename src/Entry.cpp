@@ -1,5 +1,6 @@
 #include "Entry.hpp"
 #include "CONST.hpp"
+#include "UI.hpp"
 
 std::string Entry::serialize() const {
     std::stringstream ss;
@@ -23,10 +24,10 @@ bool Entry::operator!=(const Entry& rhs) const {
 
 std::string Entry::summary() const {
     std::stringstream ss;
-    Log() << "name: " << name << "id: " << id
-          << "Title: " << name << '\n'
-          << "Cost: " << cost << " points\n"
-          << "Created at " << created << '\n';
+    Log() << "Name: " << name << "id: " << id;
+    ss << "Title: " << name << '\n'
+       << "Cost: " << cost << " points\n"
+       << "Created at " << created.to_printable(true) << '\n';
     return ss.str();
 }
 
@@ -78,10 +79,11 @@ Habit Habit::deserialize(const std::string& s) {
                  std::stoi(v[7])); //streak
 }
 
-void Habit::check_in() {
-    if (archived) throw std::runtime_error("Can't check in archived habit");
+bool Habit::check_in() {
+    if (archived) return false;
     check_ins.insert(DateTime::get_current());
     if (best_streak < ++streak) best_streak = streak;
+    return true;
 }
 
 std::string Habit::summary() const {
@@ -159,7 +161,7 @@ std::string Activity::summary() const {
     std::stringstream ss;
     ss << Entry::summary()
        << "Point multiplier: x" << benefit_multiplier << "\n"
-       << "Total time spent on the activity: " << total_time << "\n"
+       << "Total time spent on the activity: " << total_time.to_duration_printable() << "\n"
        << "Elapsed time records: ";
     std::string delim = "\n";
     for (const auto& el: time_elapsed) {
@@ -205,11 +207,20 @@ std::string Goal::serialize() const {
     return ss.str();
 }
 
+
+//TODO: Colorize the stuff
 std::string Goal::summary() const {
     std::stringstream ss;
-    ss << Entry::summary()
+    ss << color::bold_blue << Entry::summary()
        << (completed ? "Is" : "Is not") << " completed\n"
-       << "Estimated length: " << est_length << "\n"
-       << "Deadline at: " << deadline << "\n";
+       << "Estimated length: " << est_length.to_duration_printable() << "\n";
+
+    if (!deadline.incomplete() && deadline < DateTime::get_current()) {
+        ss << color::red << "The task is overdue! It was due on: \n"
+           << deadline.to_printable(true) << color::reset << "\n";
+    } else {
+        ss << "Due on: " << deadline.to_printable(true) << "\n";
+    }
+    ss << color::reset;
     return ss.str();
 }

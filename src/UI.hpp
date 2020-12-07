@@ -6,6 +6,7 @@
 #include "CONST.hpp"
 #include "Data.hpp"
 #include <termios.h>
+#include <concepts>
 
 constexpr std::string_view CLS = "clear";
 
@@ -28,7 +29,7 @@ namespace color {
   template < typename CharT, typename Traits = std::char_traits<CharT> > \
   inline std::basic_ostream< CharT, Traits >&                            \
   name(std::basic_ostream< CharT, Traits >& os)                          \
-  { return os << code; }
+  { return os << (code); }
 
 // These color definitions are based on the color scheme used by Git (the
 // distributed version control system) as declared in the file
@@ -79,24 +80,24 @@ namespace color {
 
 class UI {
 
-    static void set_table_style(fort::char_table& t, unsigned green_col, unsigned red_col); //NOLINT
+    static void set_table_style(fort::char_table& t, unsigned green_col, unsigned yellow_col); //NOLINT
 
     static std::string colorize_entry(const std::string_view& s, size_t len) {
         std::stringstream ss;
-        ss << color::bold << color::green << "[ " << std::setw(len) << std::left
+        ss << color::bold_green << "[ " << std::setw(len) << std::left
            << s << " ]" << color::reset;
         return ss.str();
     }
 
     static std::vector<std::string> to_readable_form(const Entry& e) {
         auto vec = split(e.serialize(), ";", true);
-        for (auto it = vec.begin() + 1; it != vec.end(); ++it) {
+        vec.erase(vec.begin()); //remove the ID
+        for (auto it = vec.begin(); it != vec.end(); ++it) {
             if (*it == "true")
                 *it = "Yes";
-            if (*it == "false")
+            else if (*it == "false")
                 *it = "No";
-            if (std::find(it->begin(), it->end(), ',') != it->end()) //if there is a field with ", "s
-                std::replace(it->begin(), it->end(), ',', '\n');  //replace them with \n
+            std::replace(it->begin(), it->end(), ',', '\n');  //replace , with \n
         }
         return vec;
     }
@@ -106,9 +107,25 @@ class UI {
     }
 
 public:
-    template<typename T, typename Iterable, size_t C>
+    template<size_t C>
+    static std::string as_table(const Entry& e, CONST::svarr<C> headers) {
+        fort::char_table t;
+        set_table_style(t, 0, 1);
+        t << fort::header;
+        for (const auto& el: headers)
+            t << el;
+        t << fort::endr;
+        auto vec = to_readable_form(e);
+        for (const auto& substr: vec)
+            t << substr;
+        t << fort::endr; //end the row
+        return t.to_string();
+    }
+
+    template<std::ranges::range Iterable, size_t C>
     static std::string as_table(const Iterable& j, CONST::svarr<C> headers) {
         fort::char_table t;
+        set_table_style(t, 0, 1);
         int no = 0;
         t << fort::header;
         t << "#"; //add a number column
@@ -128,26 +145,15 @@ public:
         return t.to_string();
     }
 
-    template<size_t C>
-    static std::string as_table(const Entry& e, CONST::svarr<C> headers) {
-        fort::char_table t;
-        for (const auto& el: headers)
-            t << el;
-        t << fort::endr;
-        auto vec = to_readable_form(e);
-        for (const auto& substr: vec)
-            t << substr;
-        t << fort::endr; //end the row
-        return t.to_string();
-    }
-
     //returns a value in range [ 0, list.size() ) based on what the user selects
     template<typename Iterable>
     static size_t select_entry(const Iterable& list,
                                const std::string& pre_data = "",
                                const std::string& post_data = "") {
+        if (list.empty())
+            throw std::invalid_argument("Nothing to choose from!");
         size_t selected = 0;
-        int c = 0;
+        int c = 0; //NOLINT
         do {
             cls();
             std::cout << pre_data << "\n\n";
@@ -160,10 +166,13 @@ public:
                     case static_cast<int>(KEY::ARROW_DOWN):
                         if (selected < list.size() - 1)
                             ++selected;
+                        else
+                            selected = 0;
                         break;
                     case static_cast<int>(KEY::ARROW_UP):
                         if (selected > 0)
                             --selected;
+                        else selected = list.size() - 1;
                         break;
                     default:
                         break;
@@ -211,22 +220,24 @@ public:
     static std::string get_string(const Printable& msg, CHECK mode) {
         while (true) {
             cls();
-            std::cout << msg << '\n';
+            std::cout << color::blue << msg << color::reset << '\n';
             std::string s;
             if (mode == CHECK::PASS)
                 s = get_password();
             else
                 std::getline(std::cin, s);
             std::pair<bool, std::string> res = check_string(s, mode);
-            if (!res.first)
-                std::cerr << res.second << "\n Try again. \n";
-            wait(CONST::WAIT_TIME);
+            if (!res.first) {
+                std::cout << color::red << res.second << "\nTry again. \n" << color::reset;
+                wait(CONST::WAIT_TIME * 2);
+                continue;
+            }
             return s;
         }
     }
 
     static bool yes_no(const std::string& msg) { // Asks for confirmation
-        std::cout << msg << " y/n" << std::endl;
+        std::cout << color::blue << msg << " y/n" << color::reset << std::endl;
         while (true) {
             switch (tolower(getch())) {
                 case 'y':
@@ -247,14 +258,25 @@ public:
         while (true) {
             try {
                 cls();
-                std::cout << "Enter the date in the format: \n"
-                             "YYYY-MM-DD HH:MM:SS\n";
+                std::cout << color::blue << "Enter the date in the format: \n"
+                                            "YYYY-MM-DD HH:MM:SS\n" << color::reset;
                 return DateTime::from_stream(std::cin);
             } catch (std::invalid_argument& e) {
-                std::cout << "Try again: " << e.what() << std::endl;
-                wait(CONST::WAIT_TIME);
-                continue;
+                std::cout << color::red << "Try again: " << e.what() << color::reset << std::endl;
+                wait(CONST::WAIT_TIME * 2);
             }
+        }
+    }
+
+    static DateTime get_time() {
+        while (true) {
+            try {
+                cls();
+                std::string s = get_string("Enter the time in the format\nHH:MM:SS", CHECK::TIME);
+                s.insert(0, "0000-00-00 ");
+                Log() << "Final string from get_time: " << s;
+                return DateTime::deserialize(s);
+            } catch (std::invalid_argument& e) {}
         }
     }
 
@@ -264,7 +286,7 @@ public:
         while (true) {
             id_type no = stoid(get_string(ss.str(), CHECK::ID));
             if (no > max || no < min) {
-                std::cerr << "Wrong value, try again\n";
+                std::cout << color::red << "Wrong value, try again\n" << color::reset;
                 wait(CONST::WAIT_TIME);
                 continue;
             }

@@ -123,6 +123,10 @@ public:
         return true;
     }
 
+    [[nodiscard]] bool empty() const {
+        return v.empty();
+    }
+
 
 private:
     std::vector<T> v;

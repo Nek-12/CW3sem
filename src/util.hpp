@@ -18,10 +18,12 @@ enum class CHECK {
     WORD = 'n',
     PASS = 'p',
     BOOL = 'b',
-    FLOAT = 'f',
+    DOUBLE = 'f',
     ID = 'i',
     YEAR = 'y',
     DATE = 'd',
+    TIME = 't',
+    DATETIME = 'z',
 };
 
 std::vector<std::string> split(const std::string& s, const std::string& delims,

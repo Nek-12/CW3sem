@@ -73,7 +73,7 @@ auto check_string(const std::string& s, CHECK mode)
 -> std::pair<bool, std::string> {
     auto msgFalse = [&s](const std::string& msg) {
         return std::make_pair(false, "The value " + s + " is invalid: \n" +
-                                     msg + '\n');
+                                     msg);
     };
     if (s.empty())
         return msgFalse("No data?");
@@ -103,7 +103,7 @@ auto check_string(const std::string& s, CHECK mode)
                 if (!isdigit(ch))
                     return msgFalse("invalid characters in a number");
             break;
-        case CHECK::FLOAT: // float
+        case CHECK::DOUBLE: // float
             if (s.empty() || s.size() > 7)
                 return msgFalse("too short/long for floating-point number");
             for (const auto& ch : s) {
@@ -119,10 +119,17 @@ auto check_string(const std::string& s, CHECK mode)
             if (s.size() != 1 || (s[0] != '0' && s[0] != '1'))
                 return msgFalse("not a boolean");
             break;
+        case CHECK::TIME: { //time
+            std::regex r{R"((\d{2})([-:.])(\d{2})([-:.])(\d{2}))"};
+            std::smatch res;
+            if (!std::regex_match(s, res, r))
+                return msgFalse("Not a time or improperly formatted");
+        }
+            break;
         default:
             throw std::invalid_argument("Bad argument for checkString");
     }
-    return std::make_pair(true, "");
+    return std::make_pair(true, ""); //success
 }
 
 std::string lowercase(const std::string& s) {

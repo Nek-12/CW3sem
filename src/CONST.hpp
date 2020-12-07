@@ -16,11 +16,11 @@ namespace CONST {
     static constexpr sv PASS_DONT_MATCH = "Your passwords don't match!. ";
     static constexpr svarr<2> START_MENU{"Log in", "Exit"};
     static constexpr svarr<5> MAIN_MENU{"Habits", "Activities", "Goals", "Search", "Log out"};
-    static constexpr svarr<4> ENTRY_MENU{"Select", "View summary", "New", "Go Back"};
-    static constexpr svarr<7> GOAL_MENU{"Summary", "Edit", "Delete", "Toggle", "Change duration", "Set deadline",
-                                        "Go back"};
-    static constexpr svarr<6> ACTIVITY_MENU{"Summary", "Edit", "Delete", "Add time", "Change multiplier", "Go back"};
-    static constexpr svarr<7> HABIT_MENU{"Summary", "Edit", "Delete", "Mark completed", "Archive", "History",
+    static constexpr svarr<7> GOAL_MENU{"Rename", "Change points cost", "Delete", "Toggle completed", "Change duration",
+                                        "Set deadline", "Go back"};
+    static constexpr svarr<6> ACTIVITY_MENU{"Rename", "Change points cost", "Delete", "Add time", "Change multiplier",
+                                            "Go back"};
+    static constexpr svarr<6> HABIT_MENU{"Rename", "Change points cost", "Delete", "Check in", "Archive/Unarchive",
                                          "Go back"};
     static constexpr svarr<3> SEARCH_MENU{"Search", "Filter by date", "Go back"};
     static constexpr double ACTIVITY_MULTIPLIER_PER_HOUR = 1.0;

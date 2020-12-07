@@ -36,6 +36,8 @@ public:
 
     [[nodiscard]] const DateTime& get_created() const { return created; }
 
+    void set_created(const DateTime& dt) { created = dt; }
+
 protected:
     static void validate_serialized_data(const std::string& s, char delimiter, int num_fields);
 
@@ -72,7 +74,7 @@ public:
 
     [[nodiscard]] int get_streak() const { return streak; }
 
-    void check_in();
+    bool check_in();
 
     [[nodiscard]] auto get_check_ins() const { return check_ins; }
 
@@ -128,7 +130,7 @@ public:
 
     static Goal deserialize(const std::string& s);
 
-    std::string summary() const override;
+    [[nodiscard]] std::string summary() const override;
 
     [[nodiscard]] double points() const override;
 

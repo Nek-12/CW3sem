@@ -2,105 +2,154 @@
 //TODO: Add colors everywhere (AESTHETIC)
 //TODO: Add customized greeting screen
 //TODO: Make journals private members and provide the necessary methods
-#include "util.hpp"
 #include "Data.hpp"
 #include "UI.hpp"
+#include "util.hpp"
+//TODO: Comment the code
+//TODO: Translate to Russian
+//FIXME: Fix the streak calculation for habit
+//TODO: Add stats, total points summary and other
+//TODO: add sorting
+//TODO: Implement foltering by archived / not archived
+
 
 using namespace CONST; //NOLINT
 
-void edit_habit(Habit& h) {
-
-}
-
-void edit_activity(Activity& a) {
-
-}
-
-void edit_goal(Goal& g) {
-
-}
-
-void habit_menu(Habit& h) {
+bool edit_entry(Entry& e, size_t selected) { //the item must be already selected before (it's a wrapper)
     auto& d = Data::get();
+    switch (selected) {
+        case 0: {//Rename
+            std::string name = UI::get_string("Enter a new title: ", CHECK::LINE);
+            std::stringstream ss;
+            ss << "Rename " << e.get_name() << " to " << name << " ?";
+            if (UI::yes_no(ss.str()))
+                e.rename(name);
+        }
+            return false;
+        case 1: { //change points cost
+            double val = std::stod(UI::get_string("Enter the new point cost", CHECK::DOUBLE));
+            std::stringstream ss;
+            ss << "Would you like to replace " << e.get_cost()
+               << " with " << val << " ?";
+            if (UI::yes_no(ss.str()))
+                e.set_cost(val);
+        }
+            return false;
+        case 2:
+            if (UI::yes_no("Would you really like to delete " + e.get_name() + " ?")) {
+                if (d.erase(e)) return true;
+                throw std::runtime_error("This entry is not in a journal" + e.get_name());
+            }
+            break;
+        default:
+            throw std::invalid_argument("Invalid selected value");
+    }
+    return false;
+}
+
+//"Rename", "Change points cost", "Delete", "Mark completed", "Archive/Unarchive", "Go back"
+void habit_menu(Habit& h) {
     while (true) {
-        switch (UI::select_entry(HABIT_MENU)) {
+        auto sel = UI::select_entry(HABIT_MENU, " ", h.summary());
+        switch (sel) {
             case 0:
-                std::cout << h.summary();
-                break;
             case 1:
-                //TODO: Edit
-                break;
             case 2:
-                //TODO: Delete
+                if (edit_entry(h, sel))
+                    return; //the entry was deleted
                 break;
             case 3:
-                //TODO: Check/Uncheck
+                if (h.check_in())
+                    std::cout << "Checked in at " << DateTime::get_current().to_printable(true) << '\n';
+                else
+                    std::cout << color::red << "Can't check in archived habit!\n" << color::reset;
+                wait(WAIT_TIME);
                 break;
             case 4:
-                //TODO: Change duration
+                h.swap_archived();
+                std::cout << h.get_name() << " is now "
+                          << (h.is_archived() ? "archived " : "not archived") << '\n';
+                wait(WAIT_TIME);
                 break;
             case 5:
-                //TODO: Deadline
-                break;
-            case 6:
                 return;
+            default:
+                throw std::invalid_argument("This habit menu entry should not be available");
         }
         if (!UI::yes_no("Continue working with " + h.get_name() + " ?"))
             return;
     } //loop
 }
 
+//"Rename", "Change points cost",  "Delete", "Add time", "Change multiplier", "Go back"
 void activity_menu(Activity& a) {
-    auto& d = Data::get();
     while (true) {
-        switch (UI::select_entry(ACTIVITY_MENU)) {
+        auto sel = UI::select_entry(ACTIVITY_MENU, " ", a.summary());
+        switch (sel) {
             case 0:
-                std::cout << a.summary();
-                break;
             case 1:
-                edit_activity(a);
-                break;
             case 2:
-                //TODO: Delete
+                if (edit_entry(a, sel))
+                    return; //the entry was deleted
                 break;
-            case 3:
-                //TODO: Add time
+            case 3: {
+                auto dt = UI::get_time();
+                if (UI::yes_no("Add this time? " + dt.to_duration_printable()))
+                    a.add_time(dt);
+            }
                 break;
-            case 4:
-                //TODO: Change multiplier
+            case 4: {
+                double val = std::stod(UI::get_string("Enter the new multiplier", CHECK::DOUBLE));
+                std::stringstream ss;
+                ss << "Would you like to replace " << a.get_benefit_multiplier()
+                   << " with " << val << " ?";
+                if (UI::yes_no(ss.str()))
+                    a.set_benefit_multiplier(val);
+            }
                 break;
             case 5:
                 return;
+            default:
+                throw std::invalid_argument("This activity menu entry should not be available");
         }
         if (!UI::yes_no("Continue working with " + a.get_name() + " ?"))
             return;
     } //loop
 }
 
+//"Rename", "Change points cost",  "Delete", "Toggle", "Change duration", "Set deadline","Go back"
 void goal_menu(Goal& g) {
-    auto& d = Data::get();
     while (true) {
-        switch (UI::select_entry(GOAL_MENU)) {
+        auto sel = UI::select_entry(GOAL_MENU, g.summary());
+        switch (sel) {
             case 0:
-                std::cout << g.summary();
-                break;
             case 1:
-                //TODO: Edit
-                break;
             case 2:
-                //TODO: Delete
+                if (edit_entry(g, sel))
+                    return; //the entry was deleted
                 break;
             case 3:
-                //TODO: Toggle
+                g.toggle_completed();
+                std::cout << g.get_name() << " is now "
+                          << (g.is_completed() ? "completed " : "not completed") << '\n';
+                wait(WAIT_TIME);
                 break;
-            case 4:
-                //TODO: Set duration
+            case 4: {
+                DateTime dt = UI::get_datetime();
+                if (UI::yes_no("Set this date as a new estimated duration? "))
+                    g.set_est_length(dt);
+            }
                 break;
-            case 5:
-                //TODO: Deadline
+            case 5: {
+                DateTime dt = UI::get_datetime();
+                if (UI::yes_no("Set this date as a new deadline? "))
+                    g.set_deadline(dt);
+            }
                 break;
             case 6:
                 return;
+            default:
+                throw std::invalid_argument("This goal menu entry should not be available");
         }
         if (!UI::yes_no("Continue working with " + g.get_name() + " ?"))
             return;
@@ -111,11 +160,11 @@ void goal_menu(Goal& g) {
 void forward_entry_menu(Entry* pe) {
     if (!pe) return;
     if (typeid(*pe) == typeid(Habit))
-        return habit_menu(*static_cast<Habit*>(pe));
+        return habit_menu(*static_cast<Habit*>(pe)); //NOLINT
     if (typeid(*pe) == typeid(Activity))
-        return activity_menu(*static_cast<Activity*>(pe));
+        return activity_menu(*static_cast<Activity*>(pe)); //NOLINT
     if (typeid(*pe) == typeid(Habit))
-        return goal_menu(*static_cast<Goal*>(pe));
+        return goal_menu(*static_cast<Goal*>(pe)); //NOLINT
     throw std::runtime_error("Unknown type encountered");
 }
 
@@ -140,7 +189,7 @@ void search_entry() {
             return;
     }
     if (sought.empty()) {
-        std::cerr << "Nothing was found...\n";
+        std::cout << color::red << "Nothing was found...\n" << color::reset;
         wait(WAIT_TIME);
         return;
     }
@@ -148,19 +197,65 @@ void search_entry() {
     forward_entry_menu(sought[UI::select_entry(sought, "Select an entry")]);
 }
 
+Habit& add_habit() {
+    std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
+    double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
+    return Data::get().h.emplace_back(gen_id(), name, cost);
+}
+
+Activity& add_activity() {
+    std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
+    double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
+    return Data::get().a.emplace_back(gen_id(), name, cost);
+}
+
+Goal& add_goal() {
+    std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
+    double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
+    auto& d = Data::get();
+    Goal& g = d.g.emplace_back(gen_id(), name, cost);
+    return g;
+}
+
 //select an entry from a list and operate on it or search
 void main_menu() {
     auto& d = Data::get();
+    auto adder = [](std::vector<std::string_view> vals) {
+        vals.emplace_back("+ Add New +");
+        vals.emplace_back(" <- Go back ");
+        return vals;
+    };
     while (true) {
         switch (UI::select_entry(MAIN_MENU, std::string(WELCOME_STR))) {
-            case 0:
-                habit_menu(UI::select_from(d.h));
+            case 0: { //habits
+                std::vector<std::string_view> vals = adder(d.h.as_names());
+                size_t selected = UI::select_entry(vals, "", UI::as_table(d.h, HEADERS_HABIT));
+                if (selected == vals.size() - 1) // "go back"
+                    break;
+                else if (selected == vals.size() - 2) //add new
+                    habit_menu(add_habit());
+                else habit_menu(d.h[selected]);
+            }
                 break;
-            case 1:
-                activity_menu(UI::select_from(d.a));
+            case 1: { //activities
+                auto vals = adder(d.a.as_names());
+                size_t selected = UI::select_entry(vals, "", UI::as_table(d.a, HEADERS_ACTIVITY));
+                if (selected == vals.size() - 1) // "go back"
+                    break;
+                else if (selected == vals.size() - 2) //add new
+                    activity_menu(add_activity());
+                else activity_menu(d.a[selected]);
+            }
                 break;
-            case 2:
-                goal_menu(UI::select_from(d.g));
+            case 2: { //activities
+                auto vals = adder(d.g.as_names());
+                size_t selected = UI::select_entry(vals, "", UI::as_table(d.g, HEADERS_GOAL));
+                if (selected == vals.size() - 1) // "go back"
+                    break;
+                else if (selected == vals.size() - 2) //add new
+                    goal_menu(add_goal());
+                else goal_menu(d.g[selected]);
+            }
                 break;
             case 3:
                 search_entry();
@@ -178,12 +273,12 @@ std::string create_account(const std::string& l) {
     while (true) {
         std::string p;
         UI::cls();
-        std::cout << "Creating account for user " << l << '\n';
+        std::cerr << color::blue << "Creating account for user " << l << '\n' << color::reset;
         wait(WAIT_TIME);
         p = UI::get_string(ENTER_PASS, CHECK::PASS);
         if (p == UI::get_string(CONFIRM_PASS, CHECK::PASS))
             return p;
-        std::cerr << PASS_DONT_MATCH << '\n';
+        std::cout << color::red << PASS_DONT_MATCH << '\n' << color::reset;
         wait(WAIT_TIME);
     }
 }
@@ -197,7 +292,7 @@ void log_in() {
             return;
         p = UI::get_string(ENTER_PASS, CHECK::PASS);
         if (!d.attempt_login(l, p)) {
-            if (d.user_exists(l)) {
+            if (Data::user_exists(l)) {
                 std::cout << color::red << INVALID_PASS << color::reset << '\n';
                 wait(WAIT_TIME);
                 continue;
@@ -234,7 +329,8 @@ int main(int /*unused*/, const char** /*unused*/) try {
     d.save();
     return EXIT_SUCCESS;
 } catch (std::exception& e) {
-    std::cerr << "Something bad happened: \n" << e.what() << std::endl;
+    std::cout << color::red << "Something bad happened: \n" << e.what() << color::reset << std::endl;
+    Log() << e.what();
     if (UI::yes_no("Attempt to save your data? "))
         Data::get().save();
     return 1;
