@@ -60,15 +60,16 @@ void habit_menu(Habit& h) {
                 break;
             case 3:
                 if (h.check_in())
-                    std::cout << "Checked in at " << DateTime::get_current().to_printable(true) << '\n';
+                    std::cout << color::green << "Checked in at " << DateTime::get_current().to_printable(true)
+                              << color::reset << '\n';
                 else
                     std::cout << color::red << "Can't check in archived habit!\n" << color::reset;
                 wait(WAIT_TIME);
                 break;
             case 4:
                 h.swap_archived();
-                std::cout << h.get_name() << " is now "
-                          << (h.is_archived() ? "archived " : "not archived") << '\n';
+                std::cout << color::green << h.get_name() << " is now "
+                          << (h.is_archived() ? "archived " : "not archived") << color::reset << '\n';
                 wait(WAIT_TIME);
                 break;
             case 5:
@@ -130,8 +131,8 @@ void goal_menu(Goal& g) {
                 break;
             case 3:
                 g.toggle_completed();
-                std::cout << g.get_name() << " is now "
-                          << (g.is_completed() ? "completed " : "not completed") << '\n';
+                std::cout << color::green << g.get_name() << " is now "
+                          << (g.is_completed() ? "completed " : "not completed") << color::reset << '\n';
                 wait(WAIT_TIME);
                 break;
             case 4: {

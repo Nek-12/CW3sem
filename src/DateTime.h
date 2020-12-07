@@ -232,7 +232,7 @@ public:
     static std::string weekday_string(int y, int m, int d, bool short_str) {
         if (y == 0 || m == 0 || d == 0)
             return "-";
-        int val = get_weekday(y, m, d) % 7;
+        unsigned val = get_weekday(y, m, d) % 7;
         return std::string((short_str ? WDAYS_SHORT.at(val) : WDAYS.at(val)));
     }
 

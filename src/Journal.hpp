@@ -5,8 +5,10 @@
 #include <numeric>
 #include <set>
 #include "CONST.hpp"
+#include "Entry.hpp"
 
-template<typename T>
+
+template<std::derived_from<Entry> T> //use a concept to place constraints on values
 class Journal {
 public:
     void sort(bool(* bi_predicate)(const T&, const T&)) {

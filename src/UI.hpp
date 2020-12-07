@@ -146,7 +146,7 @@ public:
     }
 
     //returns a value in range [ 0, list.size() ) based on what the user selects
-    template<typename Iterable>
+    template<std::ranges::range Iterable>
     static size_t select_entry(const Iterable& list,
                                const std::string& pre_data = "",
                                const std::string& post_data = "") {
@@ -187,7 +187,7 @@ public:
         return j[select_entry(j.as_names())];
     }
 
-    template<typename Iterable>
+    template<std::ranges::range Iterable>
     static void print(const Iterable& list, size_t selected = 0) {
         size_t max_len = 0;
         for (const auto& el: list)
