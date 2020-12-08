@@ -1,10 +1,11 @@
 # 3rd Semester Coursework
-Topic: "CLI application for tracking self-development progress"
+Topic: "CLI application for tracking self-development progress"  
 
 ## Usage  
-The app has only been tested on linux. Most likely some changes to source code will be needed
-in order for the build process to succeed.  
-Be aware that the coursework is only 50% done. You can't actually run it yet.  
+The app is only for linux.  
+The coursework is now almost done.  
+This CW is an example of the cleanest code I'm able to write so far. It doesn't contain sophisticated algorithms or a lot of features but rather shows how the project should be structured and what features of C++ 20 I'm able to use.
 
 ## License
-GPL v3
+GPL v3  
+According to the license, you may NOT modify the CW, sell it or hand it in as your own.  
