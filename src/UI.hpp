@@ -80,8 +80,6 @@ namespace color {
 
 class UI {
 
-    static void set_table_style(fort::char_table& t, unsigned green_col, unsigned yellow_col); //NOLINT
-
     static std::string colorize_entry(const std::string_view& s, size_t len) {
         std::stringstream ss;
         ss << color::bold_green << "[ " << std::setw(len) << std::left
@@ -124,6 +122,8 @@ public:
 
     template<std::ranges::range Iterable, size_t C>
     static std::string as_table(const Iterable& j, CONST::svarr<C> headers) {
+        if (j.empty())
+            return "Empty";
         fort::char_table t;
         set_table_style(t, 0, 1);
         int no = 0;
@@ -216,7 +216,6 @@ public:
         print(name_vec, selected);
     }
 
-    static int getch();
 
     static inline void pause() {
         std::cerr << CONST::ANY_KEY << std::endl;
@@ -261,8 +260,6 @@ public:
 
     static void cls() { system(std::string(CLS).c_str()); } //NOLINT
 
-    static std::string get_password();
-
     static DateTime get_datetime() {
         while (true) {
             try {
@@ -306,6 +303,14 @@ public:
             return no;
         }
     }
+
+private:
+    static std::string get_password();
+
+    static int getch();
+
+    static void set_table_style(fort::char_table& t, unsigned green_col, unsigned yellow_col); //NOLINT
+
 
 };
 

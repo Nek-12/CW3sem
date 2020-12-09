@@ -57,11 +57,19 @@ public:
         v.erase(it);
     }
 
+    void clear() noexcept {
+        return v.clear();
+    }
+
     std::string serialize() {
         std::stringstream ss;
         for (const auto& e: v)
             ss << e.serialize() << '\n';
         return ss.str();
+    }
+
+    const T& top_points_value() {
+        return *std::max_element(v.begin(), v.end(), [](const T& a, const T& b) { return a.points() < b.points(); });
     }
 
 

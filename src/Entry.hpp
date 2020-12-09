@@ -3,8 +3,15 @@
 #include "util.hpp"
 #include <set>
 #include <utility>
+#include <ostream>
 
 class Entry {
+public:
+    //outputs a summary
+    friend std::ostream& operator<<(std::ostream& os, const Entry& entry) {
+        return os << entry.summary();
+    }
+
 public:
     bool operator==(const Entry& rhs) const;
 

@@ -29,15 +29,23 @@ public:
 
     static bool user_exists(const std::string& login);
 
-    bool attempt_login(const std::string& username, const std::string& pass);
+    bool try_log_in(const std::string& username, const std::string& pass);
 
     void create_user(const std::string& l, const std::string& p);
 
-    void set_pass(const std::string& p) { hashed_pass = hash(p); }
+    bool try_change_pass(const std::string& old_p, const std::string& new_p);
+
+    bool check_pass(const std::string& p) { return hash(p) == hashed_pass; }
+
+    bool logged_in() { return !(login.empty() || hashed_pass.empty()); }
+
+    void log_out() noexcept;
 
     [[nodiscard]] const std::string& get_login() const {
         return login;
     }
+
+    bool try_delete_user(const std::string& p);
 
     [[nodiscard]] int best_streak() {
         int best = 0;

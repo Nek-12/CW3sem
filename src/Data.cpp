@@ -6,8 +6,9 @@ bool Data::user_exists(const std::string& login) {
     return std::filesystem::exists(login + ".txt");
 }
 
-bool Data::attempt_login(const std::string& username, const std::string& pass) {
+bool Data::try_log_in(const std::string& username, const std::string& pass) {
     if (!user_exists(username)) return false;
+    if (logged_in()) throw std::logic_error("Already logged in");
     std::ifstream f(username + ".txt");
     std::string phash;
     std::getline(f, phash);
@@ -30,6 +31,7 @@ void Data::create_user(const std::string& l, const std::string& p) {
 }
 
 void Data::save() {
+    if (!logged_in()) throw std::runtime_error("Not logged in");
     std::ofstream f(login + ".txt");
     f << hashed_pass << '\n'
       << a.serialize()
@@ -38,7 +40,7 @@ void Data::save() {
 }
 
 void Data::load() try {
-    if (login.empty() || hashed_pass.empty()) throw std::runtime_error("not logged in");
+    if (!logged_in()) throw std::runtime_error("not logged in");
     std::ifstream f(login + ".txt");
     Log() << "Loading file " << login;
     std::string s;
@@ -136,4 +138,36 @@ bool Data::erase(const Entry& e) {
     if (typeid(e) == typeid(Goal&))
         return erase(static_cast<const Goal&>(e)); //NOLINT
     throw std::runtime_error("Unknown type encountered");
-} //TODO: test
+}
+
+bool Data::try_delete_user(const std::string& p) try {
+    if (!user_exists(login))
+        return false;
+    std::ifstream f(login + ".txt");
+    std::string s;
+    std::getline(f, s); //get a saved password
+    if (hash(p) != s)
+        return false;
+    f.close();
+    if (!std::filesystem::remove(login + ".txt"))
+        return false;
+    log_out();
+    return true;
+} catch (std::exception& e) {
+    return false;
+}
+
+void Data::log_out() noexcept {
+    login.clear();
+    hashed_pass.clear();
+    h.clear();
+    g.clear();
+    a.clear();
+}
+
+bool Data::try_change_pass(const std::string& old_p, const std::string& new_p) {
+    if (hash(old_p) != hashed_pass)
+        return false;
+    hashed_pass = hash(new_p);
+    return true;
+}

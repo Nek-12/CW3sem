@@ -120,7 +120,7 @@ public:
 
     friend bool operator==(const DateTime& lhs, const DateTime& rhs) {
         return lhs.y == rhs.y && lhs.mon == rhs.mon && lhs.d == rhs.d &&
-                lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
+               lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
     }
 
     friend bool operator!=(const DateTime& lhs, const DateTime& rhs) {

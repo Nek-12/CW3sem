@@ -218,6 +218,89 @@ Goal& add_goal() {
     return g;
 }
 
+//returns a password for a newly created account
+std::string confirm_pass(const std::string& msg) {
+    while (true) {
+        std::string p;
+        UI::cls();
+        std::cout << msg << '\n';
+        wait(WAIT_TIME * 2);
+        p = UI::get_string(ENTER_PASS, CHECK::PASS);
+        if (p == UI::get_string(CONFIRM_PASS, CHECK::PASS))
+            return p;
+        std::cout << color::red << PASS_DONT_MATCH << '\n' << color::reset;
+        wait(WAIT_TIME);
+    }
+}
+
+void change_password() {
+    while (true) {
+        auto& d = Data::get();
+        std::string old_p = UI::get_string("Enter your old password or \"exit\" to exit", CHECK::PASS);
+        if (lowercase(old_p) == "exit")
+            return;
+        if (!d.check_pass(old_p)) {
+            std::cout << color::red << INVALID_PASS << '\n' << color::reset;
+            continue;
+        }
+        std::string new_p = confirm_pass("New password: ");
+        if (!d.try_change_pass(old_p, new_p))
+            std::cout << "Couldn't change your password...\n";
+        else return;
+    }
+}
+
+void display_everything() {
+    UI::cls();
+    auto& d = Data::get();
+    std::cout << "Habits: \n" << UI::as_table(d.h, HEADERS_HABIT) << '\n'
+              << "Activities: \n" << UI::as_table(d.a, HEADERS_ACTIVITY) << '\n'
+              << "Goals: \n" << UI::as_table(d.g, HEADERS_GOAL) << '\n';
+    UI::pause();
+}
+
+void display_report() {
+    UI::cls();
+    auto& d = Data::get();
+    std::cout << color::bold_cyan << "You've got " << d.total_entries() << " entries.\n"
+              << "Of them " << d.h.size() << " habits, " << d.a.size() << " activities, "
+              << d.g.size() << " goals.\n"
+              << "In total you can get " << d.total_points()
+              << " points for your Goals, Activities and Habits\n"
+              << "Your average value for a task is " << d.avg_points() << " points.\n"
+              << "Your best streak on habits is " << d.best_streak() << " days\n"
+              << "You still have " << d.incomplete_goals() << " goals (" << d.completed_goals()
+              << " are already completed)\n"
+              << color::reset << std::endl;
+    UI::pause();
+}
+
+void display_top3() {
+    UI::cls();
+    auto& d = Data::get();
+    std::cout << "Top habit: \n" << d.h.top_points_value() << '\n'
+              << "Top activity: \n" << d.a.top_points_value() << '\n'
+              << "Top goal: \n" << d.g.top_points_value() << '\n';
+    UI::pause();
+}
+
+bool delete_account() {
+    UI::cls();
+    auto& d = Data::get();
+    std::cout << color::red;
+    if (UI::yes_no("Do you really wish to delete your account and all its data?")) {
+        std::string s = UI::get_string(ENTER_PASS, CHECK::PASS);
+        if (d.try_delete_user(s)) {
+            std::cout << "User was deleted. You will be logged out.\n" << color::reset;
+            wait(WAIT_TIME * 2);
+            return true;
+        }
+        std::cout << PASS_DONT_MATCH;
+    }
+    std::cout << color::reset;
+    return false;
+}
+
 //select an entry from a list and operate on it or search
 void main_menu() {
     auto& d = Data::get();
@@ -228,22 +311,8 @@ void main_menu() {
     };
     while (true) {
         switch (UI::select_entry(MAIN_MENU, std::string(WELCOME_STR))) {
-            case 0: {
-                UI::cls();
-                std::cout << "Habits: \n" << UI::as_table(d.h, HEADERS_HABIT) << '\n'
-                          << "Activities: \n" << UI::as_table(d.a, HEADERS_ACTIVITY) << '\n'
-                          << "Goals: \n" << UI::as_table(d.g, HEADERS_GOAL) << '\n'
-                          << color::bold_cyan << "You've got " << d.total_entries() << " entries.\n"
-                          << "Of them " << d.h.size() << " habits, " << d.a.size() << " activities, "
-                          << d.g.size() << " goals.\n"
-                          << "In total you can get " << d.total_points()
-                          << " points for your Goals, Activities and Habits\n"
-                          << "Your best streak on habits is " << d.best_streak() << " days\n"
-                          << "You still have " << d.incomplete_goals() << " goals (" << d.completed_goals()
-                          << " are already completed)\n"
-                          << color::reset << std::endl;
-                UI::pause();
-            }
+            case 0:
+                display_report();
                 break;
             case 1: { //habits
                 std::vector<std::string_view> vals = adder(d.h.as_names());
@@ -278,26 +347,26 @@ void main_menu() {
             case 4:
                 search_entry();
                 break;
-            case 5:
-                return;
+            case 5: //show everything
+                display_everything();
+                break;
+            case 6: // top-3 entries
+                display_top3();
+                break;
+            case 7: //change pass
+                change_password();
+                break;
+            case 8: //delete acc
+                if (delete_account())
+                    return;
+                break;
+            case 9:
+                d.save();
+                d.log_out();
+                return; //go back
             default:
                 break;
         }
-    }
-}
-
-//returns a password for a newly created account
-std::string create_account(const std::string& l) {
-    while (true) {
-        std::string p;
-        UI::cls();
-        std::cerr << color::blue << "Creating account for user " << l << '\n' << color::reset;
-        wait(WAIT_TIME);
-        p = UI::get_string(ENTER_PASS, CHECK::PASS);
-        if (p == UI::get_string(CONFIRM_PASS, CHECK::PASS))
-            return p;
-        std::cout << color::red << PASS_DONT_MATCH << '\n' << color::reset;
-        wait(WAIT_TIME);
     }
 }
 
@@ -308,30 +377,30 @@ void log_in() {
         l = UI::get_string(ENTER_LOGIN, CHECK::WORD);
         if (lowercase(l) == "exit")
             return;
-        p = UI::get_string(ENTER_PASS, CHECK::PASS);
-        if (!d.attempt_login(l, p)) {
-            if (Data::user_exists(l)) {
-                std::cout << color::red << INVALID_PASS << color::reset << '\n';
-                wait(WAIT_TIME);
-                continue;
-            }
-            //user does not exist
+        if (!Data::user_exists(l)) { //user does not exist
             std::cout << color::yellow << "Account " << l << " was not found... \n"
                       << color::reset;
             if (UI::yes_no("Create a new account?")) {
-                p = create_account(l);
+                std::stringstream ss;
+                ss << color::blue << "Creating account for user " << l << color::reset;
+                p = confirm_pass(ss.str());
                 d.create_user(l, p);
+                break;
             } else continue;
         }
-        d.load();
-        main_menu();
-    }
+        p = UI::get_string(ENTER_PASS, CHECK::PASS);
+        if (d.try_log_in(l, p))
+            break;
+        std::cout << color::red << INVALID_PASS << color::reset << '\n';
+        wait(WAIT_TIME);
+    } //while true
+    d.load();
+    main_menu();
 }
 
 int main(int /*unused*/, const char** /*unused*/) try {
     //Log::flip_cerr();
     Log() << Log::flush;
-    auto& d = Data::get();
     bool out = false;
     while (!out)
         switch (UI::select_entry(START_MENU, std::string(WELCOME_STR))) {
@@ -344,7 +413,6 @@ int main(int /*unused*/, const char** /*unused*/) try {
             default:
                 break;
         }
-    d.save();
     return EXIT_SUCCESS;
 } catch (std::exception& e) {
     std::cout << '\a' << color::red << "Something bad happened: \n" << e.what() << color::reset << std::endl;

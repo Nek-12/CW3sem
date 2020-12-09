@@ -83,9 +83,11 @@ bool Habit::check_in() {
     if (archived) return false;
     auto cur = DateTime::get_current();
     if (!check_ins.empty()) { //if it's not the first
-        const DateTime& last = *(--check_ins.end()); //get the last element
+        const DateTime& last = *check_ins.crbegin(); //get the last element
         //if last check in's DAY (2) is one less than today's
-        if (cur[2] == last[2] + 1)
+        if (cur[0] == last[0] &&
+            cur[1] == last[1] &&
+            cur[2] == last[2] + 1)
             ++streak;
         else streak = 0; //if not, reset the streak :(
     } else ++streak; //if first, just increment
@@ -176,7 +178,7 @@ std::string Activity::summary() const {
         ss << delim << el;
         delim = ", \n";
     }
-    ss << color::bold_blue << '\n';
+    ss << color::reset << '\n';
     return ss.str();
 }
 
@@ -217,16 +219,16 @@ std::string Goal::serialize() const {
 
 std::string Goal::summary() const {
     std::stringstream ss;
-    ss << color::bold_blue << Entry::summary()
+    ss << Entry::summary() << color::bold_blue
        << (completed ? "Is" : "Is not") << " completed\n"
        << "Estimated length: " << est_length.to_duration_printable() << "\n";
 
     if (!deadline.incomplete() && deadline < DateTime::get_current()) {
         ss << color::red << "The task is overdue! It was due on: \n"
-           << deadline.to_printable(true) << color::reset << "\n";
+           << deadline.to_printable(true);
     } else {
-        ss << "Due on: " << deadline.to_printable(true) << "\n";
+        ss << "Due on: " << deadline.to_printable(true);
     }
-    ss << color::reset;
+    ss << color::reset << '\n';
     return ss.str();
 }
