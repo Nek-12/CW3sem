@@ -171,3 +171,18 @@ bool Data::try_change_pass(const std::string& old_p, const std::string& new_p) {
     hashed_pass = hash(new_p);
     return true;
 }
+
+int Data::best_streak() {
+    int best = 0;
+    for (const auto& el: h)
+        if (best < el.get_streak())
+            best = el.get_streak();
+    return best;
+}
+
+size_t Data::completed_goals() const {
+    size_t sum = 0;
+    for (const auto& el: g)
+        sum += el.is_completed();
+    return sum;
+}

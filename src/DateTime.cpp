@@ -1,5 +1,6 @@
 #include "DateTime.h"
 
+
 const std::regex DateTime::date_time_regex{ // NOLINT NOLINTNEXTLINE
         R"((\d{4})([-. /])(\d{1,2})([-. /])(\d{1,2})(\s|T)(\d{2})([-:.])(\d{2})([-:.])(\d{2}))"};
 
@@ -213,4 +214,115 @@ DateTime DateTime::from_stream(std::istream& is) {
     std::string s;
     std::getline(is, s);
     return DateTime::deserialize(s);
+}
+
+bool operator==(const DateTime& lhs, const DateTime& rhs) {
+    return lhs.y == rhs.y && lhs.mon == rhs.mon && lhs.d == rhs.d &&
+           lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
+}
+
+DateTime operator+(const DateTime& lhs, const DateTime& rhs) {
+    DateTime sum = lhs;
+    return sum += rhs;
+}
+
+DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
+    DateTime sum = lhs;
+    return sum -= rhs;
+}
+
+bool operator>(const DateTime& lhs, const DateTime& rhs) {
+    return rhs < lhs;
+}
+
+bool operator!=(const DateTime& lhs, const DateTime& rhs) {
+    return !(lhs == rhs);
+}
+
+bool operator<=(const DateTime& lhs, const DateTime& rhs) {
+    return (lhs < rhs) || (lhs == rhs);
+}
+
+bool operator>=(const DateTime& lhs, const DateTime& rhs) {
+    return rhs <= lhs;
+}
+
+std::ostream& operator<<(std::ostream& os, const DateTime& t) {
+    return os << t.serialize();
+}
+
+bool DateTime::operator!() const {
+    return y == 0 && mon == 0 && d == 0 && h == 0 && min == 0 && s == 0;
+}
+
+DateTime DateTime::get_current() {
+    time_t t = time(nullptr); // get system time
+    tm* now = localtime(&t); // format it according to the region
+    return DateTime(now->tm_year + 1900, now->tm_mon + 1, now->tm_mday,
+                    now->tm_hour, now->tm_min, now->tm_sec);
+}
+
+std::string DateTime::to_string() const {
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(4) << y << "-" << std::setw(2) << mon
+       << "-" << std::setw(2) << d << " " << std::setw(2) << h
+       << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+    return ss.str();
+}
+
+std::string DateTime::to_printable(bool short_date) const {
+    if (incomplete())
+        return "----.--.-- --:--:--";
+    std::stringstream ss;
+    ss << weekday_string(y, mon, d, short_date) << ", "
+       << (short_date ? MONTHS_SHORT.at(mon - 1) : MONTHS.at(mon - 1)) << " " << d << number_postfix(d) << " "
+       << y << ", " << std::setfill('0')
+       << std::setw(2) << h << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+    return ss.str();
+}
+
+std::string DateTime::to_duration_printable() const {
+    std::stringstream ss;
+    ss << y << " years, " << mon << " months, " << d << " days, "
+       << h << " hrs, " << min << " min, " << s << " s. ";
+    return ss.str();
+}
+
+bool DateTime::is_leap(int year) {
+    if (year < 0)
+        throw std::invalid_argument("negative year");
+    return year != 0 &&
+           (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
+}
+
+unsigned DateTime::get_weekday(int y, int m, int d) {
+    if (y == 0 || m == 0 || d == 0) //unknown
+        return 0;
+    m = (m + 9) % 12;
+    y -= m / 10;
+    return 365 * y + y / 4 - y / 100 + y / 400 + (m * 306 + 5) / 10 + (d - 1);
+}
+
+std::string DateTime::weekday_string(int y, int m, int d, bool short_str) {
+    if (y == 0 || m == 0 || d == 0)
+        return "-";
+    unsigned val = get_weekday(y, m, d) % 7;
+    return std::string((short_str ? WDAYS_SHORT.at(val) : WDAYS.at(val)));
+}
+
+std::string DateTime::number_postfix(int num) {
+    switch (std::abs(num)) {
+        case 1:
+            return "st";
+        case 2:
+            return "nd";
+        case 3:
+            return "rd";
+        default:
+            return "th";
+    }
+}
+
+bool DateTime::incomplete() const {
+    return y == 0 || mon == 0 || d == 0;
 }

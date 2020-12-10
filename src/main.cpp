@@ -1,16 +1,11 @@
-//READ THIS FILE FROM BOTTOM TO TOP
-//TODO: Add colors everywhere (AESTHETIC)
-//TODO: Add customized greeting screen
-//TODO: Make journals private members and provide the necessary methods
+//! READ THIS FILE FROM BOTTOM TO TOP
 #include "Data.hpp"
 #include "UI.hpp"
 #include "util.hpp"
 //TODO: Comment the code
-//TODO: Translate to Russian
-//FIXME: Fix the streak calculation for habit
-//TODO: Add stats, total points summary and other
 //TODO: add sorting
 //TODO: Implement foltering by archived / not archived
+//TODO: Make journals private members and provide the necessary methods
 
 
 using namespace CONST; //NOLINT

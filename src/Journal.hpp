@@ -6,7 +6,7 @@
 #include <set>
 #include "CONST.hpp"
 #include "Entry.hpp"
-
+//header-only class
 
 template<std::derived_from<Entry> T> //use a concept to place constraints on values
 class Journal {

@@ -47,24 +47,11 @@ public:
 
     bool try_delete_user(const std::string& p);
 
-    [[nodiscard]] int best_streak() {
-        int best = 0;
-        for (const auto& el: h)
-            if (best < el.get_streak())
-                best = el.get_streak();
-        return best;
-    }
+    [[nodiscard]] int best_streak();
 
-    [[nodiscard]] size_t completed_goals() const {
-        size_t sum = 0;
-        for (const auto& el: g)
-            sum += el.is_completed();
-        return sum;
-    }
+    [[nodiscard]] size_t completed_goals() const;
 
-    [[nodiscard]] size_t incomplete_goals() const {
-        return g.size() - completed_goals();
-    }
+    [[nodiscard]] size_t incomplete_goals() const { return g.size() - completed_goals(); }
 
     //search everything for a selected string
     std::vector<Entry*> find(const std::string& s);

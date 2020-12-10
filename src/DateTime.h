@@ -93,20 +93,15 @@ public:
             "Dec"
     };
 
+    //used in deserialize, specifies constraints on the datetime value
     enum {
-        PAST = 1, FUTURE = 0, ANY = -1 //
+        PAST = 1, FUTURE = 0, ANY = -1
     };
 
 
-    friend DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
-        DateTime sum = lhs;
-        return sum -= rhs;
-    }
+    friend DateTime operator-(const DateTime& lhs, const DateTime& rhs);
 
-    friend DateTime operator+(const DateTime& lhs, const DateTime& rhs) {
-        DateTime sum = lhs;
-        return sum += rhs;
-    }
+    friend DateTime operator+(const DateTime& lhs, const DateTime& rhs);
 
     DateTime operator-=(const DateTime& rhs);
 
@@ -114,93 +109,46 @@ public:
 
     friend bool operator<(const DateTime& lhs, const DateTime& rhs);
 
-    friend bool operator>(const DateTime& lhs, const DateTime& rhs) {
-        return rhs < lhs;
-    }
+    friend bool operator>(const DateTime& lhs, const DateTime& rhs);
 
-    friend bool operator==(const DateTime& lhs, const DateTime& rhs) {
-        return lhs.y == rhs.y && lhs.mon == rhs.mon && lhs.d == rhs.d &&
-               lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
-    }
+    friend bool operator==(const DateTime& lhs, const DateTime& rhs);
 
-    friend bool operator!=(const DateTime& lhs, const DateTime& rhs) {
-        return !(lhs == rhs);
-    }
+    friend bool operator!=(const DateTime& lhs, const DateTime& rhs);
 
-    friend bool operator<=(const DateTime& lhs, const DateTime& rhs) {
-        return (lhs < rhs) || (lhs == rhs);
-    }
+    friend bool operator<=(const DateTime& lhs, const DateTime& rhs);
 
-    friend bool operator>=(const DateTime& lhs, const DateTime& rhs) {
-        return rhs <= lhs;
-    }
+    friend bool operator>=(const DateTime& lhs, const DateTime& rhs);
 
-    friend std::ostream& operator<<(std::ostream& os, const DateTime& t) {
-        return os << t.serialize();
-    }
+    friend std::ostream& operator<<(std::ostream& os, const DateTime& t);
 
     //returns a value at a position from 0 to 5, may throw
     int operator[](int n) const;
 
     //Returns true if the date is not blank (0000-00-00 00:00:00)
-    bool operator!() const {
-        return y == 0 && mon == 0 && d == 0 && h == 0 && min == 0 && s == 0;
-    }
+    bool operator!() const;
 
     //create a blank value 0000-00-00 00:00:00
     DateTime() = default;
 
     DateTime(int year, int month, int day, int hour, int minute, int second);
 
-    static DateTime get_current() {
-        time_t t = time(nullptr); // get system time
-        tm* now = localtime(&t); // format it according to the region
-        return DateTime(now->tm_year + 1900, now->tm_mon + 1, now->tm_mday,
-                        now->tm_hour, now->tm_min, now->tm_sec);
-    }
+    static DateTime get_current();
 
     //PAST - perform a check if a date should be in the past (according to local time)
     //FUTURE - in the future
     //ANY - skip the check
     static DateTime deserialize(const std::string& str, int is_past = ANY);
 
-    [[nodiscard]] std::string to_string() const {
-        std::stringstream ss;
-        ss << std::setfill('0') << std::setw(4) << y << "-" << std::setw(2) << mon
-           << "-" << std::setw(2) << d << " " << std::setw(2) << h
-           << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
-        return ss.str();
-    }
+    [[nodiscard]] std::string to_string() const;
 
-    [[nodiscard]] std::string to_printable(bool short_date) const {
-        if (incomplete())
-            return "----.--.-- --:--:--";
-        std::stringstream ss;
-        ss << weekday_string(y, mon, d, short_date) << ", "
-           << (short_date ? MONTHS_SHORT.at(mon - 1) : MONTHS.at(mon - 1)) << " " << d << number_postfix(d) << " "
-           << y << ", " << std::setfill('0')
-           << std::setw(2) << h << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
-        return ss.str();
-    }
+    [[nodiscard]] std::string to_printable(bool short_date) const;
 
-    [[nodiscard]] std::string to_duration_printable() const {
-        std::stringstream ss;
-        ss << y << " years, " << mon << " months, " << d << " days, "
-           << h << " hrs, " << min << " min, " << s << " s. ";
-        return ss.str();
-    }
+    [[nodiscard]] std::string to_duration_printable() const;
 
-    [[nodiscard]] std::string serialize() const {
-        return to_string();
-    }
+    [[nodiscard]] std::string serialize() const { return to_string(); }
 
     //check if a year is leap
-    static bool is_leap(int year) {
-        if (year < 0)
-            throw std::invalid_argument("negative year");
-        return year != 0 &&
-               (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
-    }
+    static bool is_leap(int year);
 
     //returns the amount of days in a month (needs year to check Feb)
     //default year returns respectable default value (28) for Feb
@@ -221,37 +169,13 @@ public:
 
     static DateTime from_stream(std::istream& is);
 
-    static unsigned get_weekday(int y, int m, int d) {
-        if (y == 0 || m == 0 || d == 0) //unknown
-            return 0;
-        m = (m + 9) % 12;
-        y -= m / 10;
-        return 365 * y + y / 4 - y / 100 + y / 400 + (m * 306 + 5) / 10 + (d - 1);
-    }
+    static unsigned get_weekday(int y, int m, int d);
 
-    static std::string weekday_string(int y, int m, int d, bool short_str) {
-        if (y == 0 || m == 0 || d == 0)
-            return "-";
-        unsigned val = get_weekday(y, m, d) % 7;
-        return std::string((short_str ? WDAYS_SHORT.at(val) : WDAYS.at(val)));
-    }
+    static std::string weekday_string(int y, int m, int d, bool short_str);
 
-    static std::string number_postfix(int num) {
-        switch (std::abs(num)) {
-            case 1:
-                return "st";
-            case 2:
-                return "nd";
-            case 3:
-                return "rd";
-            default:
-                return "th";
-        }
-    }
+    static std::string number_postfix(int num);
 
-    [[nodiscard]] bool incomplete() const {
-        return y == 0 || mon == 0 || d == 0;
-    }
+    [[nodiscard]] bool incomplete() const;
 
 private:
     int y = 0;
