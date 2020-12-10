@@ -236,12 +236,15 @@ void change_password() {
             return;
         if (!d.check_pass(old_p)) {
             std::cout << color::red << INVALID_PASS << '\n' << color::reset;
+            wait(WAIT_TIME * 2);
             continue;
         }
         std::string new_p = confirm_pass("New password: ");
         if (!d.try_change_pass(old_p, new_p))
-            std::cout << "Couldn't change your password...\n";
-        else return;
+            std::cout << color::red << "Couldn't change your password...\n";
+        else std::cout << color::green << "Changed your password successfully \n";
+        std::cout << color::reset;
+        wait(WAIT_TIME * 2);
     }
 }
 
