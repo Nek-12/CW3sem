@@ -10,6 +10,12 @@
 
 constexpr std::string_view CLS = "clear";
 
+template<typename T>
+concept printable = requires(T t) {
+    { std::cout << t } -> std::same_as<std::ostream&>;
+};
+
+
 enum class KEY : int {
     ENTER = 10,
     BACKSPACE = 127,
@@ -80,7 +86,8 @@ namespace color {
 
 class UI {
 
-    static std::string colorize_entry(const std::string_view& s, size_t len) {
+    template<printable T>
+    static std::string colorize_entry(const T& s, size_t len) {
         std::stringstream ss;
         ss << color::bold_green << "[ " << std::setw(len) << std::left
            << s << " ]" << color::reset;
@@ -146,21 +153,22 @@ public:
     }
 
     //returns a value in range [ 0, list.size() ) based on what the user selects
-    template<std::ranges::range Iterable>
-    static size_t select_entry(const Iterable& list,
-                               const std::string& pre_data = "",
-                               const std::string& post_data = "") {
+    template<std::ranges::range R, std::convertible_to<std::string> T = std::string, std::convertible_to<std::string> V = std::string>
+    static size_t select_entry(const R& list,
+                               const T& pre_data = "",
+                               const V& post_data = "") {
+        std::string a = pre_data, b = post_data;
         if (list.empty())
             throw std::invalid_argument("Nothing to choose from!");
         size_t selected = 0;
         int c = 0; //NOLINT
         do {
             cls();
-            if (!pre_data.empty())
-                std::cout << pre_data << "\n\n";
+            if (!a.empty())
+                std::cout << a << "\n\n";
             print(list, selected);
-            if (!post_data.empty())
-                std::cout << post_data << "\n";
+            if (!b.empty())
+                std::cout << b << "\n";
             c = getch();
             Log() << "Getch() = " << c;
             if (c == static_cast<int>(KEY::ARROW_1) && getch() == static_cast<int>(KEY::ARROW_2)) {
@@ -194,8 +202,8 @@ public:
         return j[select_entry(j.as_names())];
     }
 
-    template<std::ranges::range Iterable>
-    static void print(const Iterable& list, size_t selected = 0) {
+    template<std::ranges::range R>
+    static void print(const R& list, size_t selected = 0) {
         size_t max_len = 0;
         for (const auto& el: list)
             if (el.size() > max_len)
@@ -222,7 +230,7 @@ public:
         getch();
     }
 
-    template<typename Printable>
+    template<printable Printable>
     static std::string get_string(const Printable& msg, CHECK mode) {
         while (true) {
             cls();
