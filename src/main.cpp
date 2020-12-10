@@ -159,7 +159,7 @@ void forward_entry_menu(Entry* pe) {
         return habit_menu(*static_cast<Habit*>(pe)); //NOLINT
     if (typeid(*pe) == typeid(Activity))
         return activity_menu(*static_cast<Activity*>(pe)); //NOLINT
-    if (typeid(*pe) == typeid(Habit))
+    if (typeid(*pe) == typeid(Goal))
         return goal_menu(*static_cast<Goal*>(pe)); //NOLINT
     throw std::runtime_error("Unknown type encountered");
 }
