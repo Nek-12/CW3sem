@@ -134,6 +134,8 @@ public:
 
     static DateTime get_current();
 
+    static DateTime from_epoch(long s);
+
     //PAST - perform a check if a date should be in the past (according to local time)
     //FUTURE - in the future
     //ANY - skip the check
@@ -177,6 +179,10 @@ public:
 
     [[nodiscard]] bool incomplete() const;
 
+    [[nodiscard]] time_t to_epoch() const;
+
+    [[nodiscard]] tm to_tm_struct() const;
+
 private:
     int y = 0;
     int mon = 0;
@@ -184,6 +190,9 @@ private:
     int h = 0;
     int min = 0;
     int s = 0;
+
+    //calculate a magic number for date operations
+    static int g(int y, int m, int d);
 
     static const std::regex date_time_regex;
 

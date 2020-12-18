@@ -17,6 +17,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 set(FORT_ENABLE_TESTING OFF CACHE INTERNAL "")
 
 
-add_executable(CW3 lib/sha256.h lib/sha256.cpp src/App.cpp src/Entry.hpp src/Entry.cpp src/CONST.hpp src/util.hpp src/util.cpp src/Journal.hpp src/Data.cpp src/Data.hpp src/UI.hpp src/DateTime.h src/DateTime.cpp src/App.hpp)
+add_executable(CW3 lib/sha256.h lib/sha256.cpp src/main.cpp src/Entry.hpp src/Entry.cpp src/CONST.hpp src/util.hpp src/util.cpp src/Journal.hpp src/Data.cpp src/Data.hpp src/UI.hpp src/DateTime.h src/DateTime.cpp src/App.hpp)
 add_subdirectory(lib/libfort)
 target_link_libraries(CW3 PRIVATE fort)

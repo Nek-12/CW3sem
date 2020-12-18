@@ -1,7 +1,6 @@
 //! READ THIS FILE FROM BOTTOM TO TOP
 #include "App.hpp"
 //TODO: Comment the code
-//TODO: Make journals private members and provide the necessary methods
 
 int main(int /*unused*/, const char** /*unused*/) try {
     //Log::flip_cerr();
