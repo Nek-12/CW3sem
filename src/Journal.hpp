@@ -75,12 +75,16 @@ public:
 
     const T& top_points_value() {
         if (empty()) throw std::runtime_error("Top points on an empty journal"); //TODO Handle this better
-        return *std::max_element(v.begin(), v.end(), [](const T& a, const T& b) { return a.points() < b.points(); });
+        auto& ref = *std::max_element(v.begin(), v.end(),
+                                      [](const T& a, const T& b) { return a.points() < b.points(); });
+        Log() << "Called top points on " << ref.get_name();
+        return ref;
     }
 
 
     [[nodiscard]] auto as_names() const -> std::vector<std::string_view> {
         std::vector<std::string_view> ret;
+        Log() << "Returned " << v.size() << " names";
         for (const auto& el: v)
             ret.emplace_back(el.get_name());
         return ret;
@@ -118,17 +122,18 @@ public:
         return ret;
     }
 
-    [[nodiscard]] std::vector<T*> filter_active_state(bool archived) {
+    [[nodiscard]] std::vector<T*> filter(bool archived) {
         return filter([archived](const T& val) { return val.is_archived() == archived; });
     }
 
     //returns pointers to all entries matching a pattern
-    std::vector<T*> find(const std::string& name) {
-        return filter([name](const T& val) { return val.get_name().find(name) != std::string::npos; });
+    std::vector<T*> filter(const std::string& name) {
+        return filter(
+                [name](const T& val) { return lowercase(val.get_name()).find(lowercase(name)) != std::string::npos; });
     }
 
     //returns pointers to all entries before or after the selected date (inclusive)
-    std::vector<T*> find(const DateTime& created, bool before) {
+    std::vector<T*> filter(const DateTime& created, bool before) {
         if (before)
             return filter([created](const T& val) { return val.get_created() <= created; });
         else
@@ -144,6 +149,7 @@ public:
         auto it = std::find(v.begin(), v.end(), val);
         if (it == v.end())
             return false;
+        Log() << "Erasing " << it->get_name();
         v.erase(it);
         return true;
     }

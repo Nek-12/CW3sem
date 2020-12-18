@@ -307,12 +307,12 @@ class App {
     //headers are for displaying the entry as a table
     template<typename T, size_t V>
     void select_menu(bool hidden, Journal<T>& j, void(App::*menu_func)(T&), svarr<V> headers) {
-        std::vector<T*> filtered = j.filter_active_state(hidden); //first get hidden or not hidden entries only
+        std::vector<T*> filtered = j.filter(hidden); //first get hidden or not hidden entries only
         std::vector<std::string_view> names = Journal<T>::as_names(filtered); //get their names
         names.insert(names.begin(), "+ Add New +"); //add other menu entries
         names.emplace_back((!hidden ? "- View hidden -" : " - View not hidden -"));
         names.emplace_back("<- Go back ");
-        size_t selected = UI::select_entry(names, "", UI::as_table(j, headers)); //select an entry
+        size_t selected = UI::select_entry(names, "", UI::as_table(filtered, headers)); //select an entry
         if (selected == names.size() - 1) //go back
             return;
         else if (selected == names.size() - 2) // show hidden/not

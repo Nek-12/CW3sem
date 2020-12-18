@@ -73,9 +73,9 @@ void Data::load() try {
 
 std::vector<Entry*> Data::find(const std::string& s) {
     std::vector<Entry*> ret;
-    auto vph = h.find(s);
-    auto vpa = g.find(s);
-    auto vpg = a.find(s);
+    auto vph = h.filter(s);
+    auto vpa = g.filter(s);
+    auto vpg = a.filter(s);
     ret.insert(
             ret.end(),
             std::make_move_iterator(vph.begin()),
@@ -96,9 +96,9 @@ std::vector<Entry*> Data::find(const std::string& s) {
 
 std::vector<Entry*> Data::find(const DateTime& dt, bool before) {
     std::vector<Entry*> ret;
-    auto vph = h.find(dt, before);
-    auto vpa = g.find(dt, before);
-    auto vpg = a.find(dt, before);
+    auto vph = h.filter(dt, before);
+    auto vpa = g.filter(dt, before);
+    auto vpg = a.filter(dt, before);
     ret.insert(
             ret.end(),
             std::make_move_iterator(vph.begin()),

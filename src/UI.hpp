@@ -167,7 +167,7 @@ public:
             print(list, selected);
             std::cout << post_data << "\n";
             c = getch();
-            Log() << "Getch() = " << c;
+            //Log() << "Getch() = " << c;
             if (c == static_cast<int>(KEY::ARROW_1) && getch() == static_cast<int>(KEY::ARROW_2)) {
                 switch (getch()) {
                     case static_cast<int>(KEY::ARROW_DOWN):

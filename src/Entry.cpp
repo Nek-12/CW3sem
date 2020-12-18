@@ -42,7 +42,7 @@ double Habit::points() const {
     // coefficient will always be >1
     double a = (1 + check_ins.size() / (DateTime::get_current() - get_created()).to_d_approx());
     Log() << "Points multiplier of " << get_name() << ": " << a;
-    return (get_cost() * a + streak) * is_archived();
+    return (get_cost() * a + streak) * !is_archived();
 }
 
 std::string Habit::serialize() const {
@@ -161,12 +161,13 @@ double Activity::points() const {
     double a = (1 + (total_time.to_h_approx() * CONST::ACTIVITY_MULTIPLIER_PER_HOUR /
                      (DateTime::get_current() - get_created()).to_h_approx()));
     Log() << "Points multiplier of " << get_name() << ": " << a;
-    return get_cost() * benefit_multiplier * a * is_archived();
+    return get_cost() * benefit_multiplier * a * !is_archived();
 }
 
 void Activity::add_time(const DateTime& dt) {
     time_elapsed.insert(dt);
     total_time += dt;
+    Log() << "Added " << dt << " to " << this->get_name();
 }
 
 std::string Activity::summary() const {
@@ -207,7 +208,7 @@ Goal Goal::deserialize(const std::string& s) {
 }
 
 double Goal::points() const {
-    return (get_cost() + est_length.to_h_approx()) * is_completed();
+    return (get_cost() + est_length.to_h_approx()) * !is_completed();
 }
 
 std::string Goal::serialize() const {

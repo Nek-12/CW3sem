@@ -120,7 +120,7 @@ auto check_string(const std::string& s, CHECK mode)
                 return msgFalse("not a boolean");
             break;
         case CHECK::TIME: { //time
-            std::regex r{R"((\d{2})([-:.])(\d{2})([-:.])(\d{2}))"};
+            std::regex r{R"((\d{1,2})([-:.])(\d{1,2})([-:.])(\d{1,2}))"};
             std::smatch res;
             if (!std::regex_match(s, res, r))
                 return msgFalse("Not a time or improperly formatted");
