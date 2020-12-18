@@ -18,12 +18,14 @@ public:
     bool operator!=(const Entry& rhs) const;
 
 public:
-    explicit Entry(id_type id, std::string name, double cost) : id(id), name(std::move(name)), cost(cost) {
-        created = DateTime::get_current();
-    }
+    explicit Entry(id_type id, std::string name, double cost) :
+            id(id), name(std::move(name)), cost(cost), created(DateTime::get_current()), archived(false) {}
 
-    Entry(id_type id, std::string name, double cost, const DateTime& created) : id(id), name(std::move(
-            name)), cost(cost), created(created) {}
+    explicit Entry(std::string name, double cost) :
+            id(gen_id()), name(std::move(name)), cost(cost), archived(false) {}
+
+    Entry(id_type id, std::string name, double cost, const DateTime& created, bool archived) : id(id), name(std::move(
+            name)), cost(cost), created(created), archived(archived) {}
 
     [[nodiscard]] virtual double points() const = 0;
 
@@ -45,6 +47,14 @@ public:
 
     void set_created(const DateTime& dt) { created = dt; }
 
+    [[nodiscard]] bool is_archived() const {
+        return archived;
+    }
+
+    void swap_archived() {
+        archived = !archived;
+    }
+
 protected:
     static void validate_serialized_data(const std::string& s, char delimiter, int num_fields);
 
@@ -53,6 +63,7 @@ private:
     std::string name;
     double cost = 0;
     DateTime created;
+    bool archived;
 };
 
 class Habit : public Entry {
@@ -61,7 +72,7 @@ public:
 
     Habit(id_type id, std::string name, double cost, DateTime created, std::set<DateTime> check_ins, bool archived,
           int best_streak,
-          int streak) : Entry(id, std::move(name), cost, created), check_ins(std::move(check_ins)), archived(archived),
+          int streak) : Entry(id, std::move(name), cost, created, archived), check_ins(std::move(check_ins)),
                         best_streak(best_streak),
                         streak(streak) {}
 
@@ -72,10 +83,6 @@ public:
     static constexpr char DELIM = '@';
 
     static Habit deserialize(const std::string& s);
-
-    void swap_archived() { archived = !archived; }
-
-    [[nodiscard]] bool is_archived() const { return archived; }
 
     [[nodiscard]] int get_best_streak() const { return best_streak; }
 
@@ -90,7 +97,6 @@ public:
 private:
     //automatically sorted by date
     std::set<DateTime> check_ins; //when did we mark this habit as complete?
-    bool archived = false;
     int best_streak = 0;
     int streak = 0; //current
 };
@@ -100,11 +106,11 @@ public:
     Activity(id_type id, const std::string& name, double cost) : Entry(id, name, cost) {}
 
     Activity(id_type id, const std::string& name, double cost, const DateTime& created,
-             std::set<DateTime> time_elapsed, const DateTime& total_time, double benefit_multiplier) :
-            Entry(id, name, cost, created), time_elapsed(std::move(time_elapsed)),
+             std::set<DateTime> time_elapsed, const DateTime& total_time, double benefit_multiplier, bool archived) :
+            Entry(id, name, cost, created, archived), time_elapsed(std::move(time_elapsed)),
             total_time(total_time), benefit_multiplier(benefit_multiplier) {}
 
-    std::string summary() const override;
+    [[nodiscard]] std::string summary() const override;
 
     static Activity deserialize(const std::string& s);
 
@@ -133,7 +139,7 @@ public:
 
     Goal(id_type id, const std::string& name, double cost, const DateTime& created, bool completed,
          const DateTime& est_length, const DateTime& deadline) :
-            Entry(id, name, cost, created), completed(completed), est_length(est_length), deadline(deadline) {}
+            Entry(id, name, cost, created, completed), est_length(est_length), deadline(deadline) {}
 
     static Goal deserialize(const std::string& s);
 
@@ -143,9 +149,9 @@ public:
 
     [[nodiscard]] std::string serialize() const override;
 
-    [[nodiscard]] bool is_completed() const { return completed; }
+    [[nodiscard]] bool is_completed() const { return is_archived(); }
 
-    void toggle_completed() { completed = !completed; }
+    void toggle_completed() { swap_archived(); }
 
     [[nodiscard]] const DateTime& get_est_length() const { return est_length; }
 
@@ -160,7 +166,6 @@ public:
 
     static constexpr char DELIM = '#';
 private:
-    bool completed = false;
     DateTime est_length;
     DateTime deadline;
 };

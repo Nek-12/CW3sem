@@ -153,22 +153,19 @@ public:
     }
 
     //returns a value in range [ 0, list.size() ) based on what the user selects
-    template<std::ranges::range R, std::convertible_to<std::string> T = std::string, std::convertible_to<std::string> V = std::string>
+    template<std::ranges::range R, printable T = std::string, printable V = std::string>
     static size_t select_entry(const R& list,
                                const T& pre_data = "",
                                const V& post_data = "") {
-        std::string a = pre_data, b = post_data;
         if (list.empty())
             throw std::invalid_argument("Nothing to choose from!");
         size_t selected = 0;
         int c = 0; //NOLINT
         do {
             cls();
-            if (!a.empty())
-                std::cout << a << "\n\n";
+            std::cout << pre_data << "\n";
             print(list, selected);
-            if (!b.empty())
-                std::cout << b << "\n";
+            std::cout << post_data << "\n";
             c = getch();
             Log() << "Getch() = " << c;
             if (c == static_cast<int>(KEY::ARROW_1) && getch() == static_cast<int>(KEY::ARROW_2)) {
@@ -219,6 +216,7 @@ public:
 
     static void print(const std::vector<Entry*>& vec, size_t selected = 0) {
         std::vector<std::string> name_vec;
+        name_vec.reserve(vec.size());
         for (auto* el : vec)
             name_vec.push_back(el->get_name());
         print(name_vec, selected);

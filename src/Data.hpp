@@ -66,6 +66,27 @@ public:
 
     bool erase(const Entry& val);
 
+    void sort_by_points() {
+        auto comp = [](const Entry& l, const Entry& r) { return l.points() < r.points(); };
+        sort_by(comp);
+    }
+
+    void sort_by_date() {
+        auto comp = [](const Entry& l, const Entry& r) { return l.get_created() < r.get_created(); };
+        sort_by(comp);
+    }
+
+    void sort_by_name() {
+        auto comp = [](const Entry& l, const Entry& r) { return l.get_name() < r.get_name(); }; //NOLINT
+        sort_by(comp);
+    }
+
+    void sort_by(bool(* bi_predicate)(const Entry&, const Entry&)) {
+        h.sort(bi_predicate);
+        g.sort(bi_predicate);
+        a.sort(bi_predicate);
+    }
+
     Journal<Habit> h; //NOLINT
     Journal<Goal> g; //NOLINT
     Journal<Activity> a; //NOLINT

@@ -5,7 +5,7 @@
 std::string Entry::serialize() const {
     std::stringstream ss;
     char delim = ';';
-    ss << id << delim << name << delim << cost << delim << created;
+    ss << id << delim << name << delim << cost << delim << created << delim << std::boolalpha << archived;
     return ss.str();
 }
 
@@ -25,9 +25,12 @@ bool Entry::operator!=(const Entry& rhs) const {
 std::string Entry::summary() const {
     std::stringstream ss;
     Log() << "Name: " << name << "id: " << id;
-    ss << color::bold_blue << "Title: " << name << '\n'
+    ss << color::bold_blue
+       << "Title: " << name << '\n'
        << "Cost: " << cost << " points\n"
+       << (archived ? "Is " : "Isn't ") << " archived\n"
        << "Created at " << created.to_printable(true) << color::reset << '\n';
+
     return ss.str();
 }
 
@@ -39,8 +42,7 @@ double Habit::points() const {
     // coefficient will always be >1
     double a = (1 + check_ins.size() / (DateTime::get_current() - get_created()).to_d_approx());
     Log() << "Points multiplier of " << get_name() << ": " << a;
-
-    return get_cost() * a + streak;
+    return (get_cost() * a + streak) * is_archived();
 }
 
 std::string Habit::serialize() const {
@@ -54,7 +56,7 @@ std::string Habit::serialize() const {
     delim = ';';
     if (check_ins.empty())
         ss << delim; //empty value
-    ss << delim << std::boolalpha << archived << delim << best_streak << delim << streak;
+    ss << delim << best_streak << delim << streak;
     Log() << "habit serialized: " << ss.str();
     return ss.str();
 }
@@ -64,7 +66,7 @@ Habit Habit::deserialize(const std::string& s) {
     Log() << "habit to deserialize: " << s;
     auto v = split(s, ";", true); //even if there are no check-ins, it's valid
     v[0].erase(0, 1); //remove DELIM
-    auto ci_svec = split(v[4], ",", false);
+    auto ci_svec = split(v[5], ",", false);
     std::set<DateTime> check_ins;
     for (const auto& el: ci_svec) //TODO: Find a suitable std:: algorithm
         check_ins.insert(DateTime::deserialize(el, DateTime::PAST));
@@ -74,13 +76,13 @@ Habit Habit::deserialize(const std::string& s) {
                  std::stod(v[2]), //cost
                  DateTime::deserialize(v[3], DateTime::PAST), //created
                  check_ins, //check_ins set
-                 stob(v[5]), //archived
+                 stob(v[4]), //archived
                  std::stoi(v[6]), //best streak
                  std::stoi(v[7])); //streak
 }
 
 bool Habit::check_in() {
-    if (archived) return false;
+    if (is_archived()) return false;
     auto cur = DateTime::get_current();
     if (!check_ins.empty()) { //if it's not the first
         const DateTime& last = *check_ins.crbegin(); //get the last element
@@ -99,7 +101,6 @@ bool Habit::check_in() {
 std::string Habit::summary() const {
     std::stringstream ss;
     ss << Entry::summary() << color::bold_blue
-       << (archived ? "Is " : "Isn't ") << " archived\n"
        << "Best streak: " << best_streak << " days\n"
        << "Current streak: " << streak << " days\n"
        << "Check ins: ";
@@ -137,11 +138,11 @@ std::string Activity::serialize() const {
 
 
 Activity Activity::deserialize(const std::string& s) {
-    validate_serialized_data(s, DELIM, 7);
+    validate_serialized_data(s, DELIM, 8);
     Log() << "activity to deserialize: " << s;
     auto v = split(s, ";", true);
     v[0].erase(0, 1); //remove DELIM
-    auto te_svec = split(v[4], ",", false);
+    auto te_svec = split(v[5], ",", false);
     std::set<DateTime> time_elapsed;
     for (const auto& el: te_svec) //TODO: Find a suitable std:: algorithm
         time_elapsed.insert(DateTime::deserialize(el, DateTime::PAST));
@@ -151,15 +152,16 @@ Activity Activity::deserialize(const std::string& s) {
                     std::stod(v[2]), //cost
                     DateTime::deserialize(v[3], DateTime::PAST), //created
                     time_elapsed, //time_elapsed set
-                    DateTime::deserialize(v[5], DateTime::ANY),  //total_time
-                    std::stod(v[6])); //benefit_multiplier
+                    DateTime::deserialize(v[6], DateTime::ANY),  //total_time
+                    std::stod(v[7]), //benefit_multiplier
+                    stob(v[4]));
 }
 
 double Activity::points() const {
     double a = (1 + (total_time.to_h_approx() * CONST::ACTIVITY_MULTIPLIER_PER_HOUR /
                      (DateTime::get_current() - get_created()).to_h_approx()));
     Log() << "Points multiplier of " << get_name() << ": " << a;
-    return get_cost() * benefit_multiplier * a;
+    return get_cost() * benefit_multiplier * a * is_archived();
 }
 
 void Activity::add_time(const DateTime& dt) {
@@ -186,7 +188,6 @@ std::string Activity::summary() const {
 ////////////////GOAL//////////////////
 
 /*
- *  bool completed = false;
     DateTime est_length;
     DateTime deadline;
  */
@@ -206,24 +207,21 @@ Goal Goal::deserialize(const std::string& s) {
 }
 
 double Goal::points() const {
-    return (get_cost() + est_length.to_h_approx()) * completed;
+    return (get_cost() + est_length.to_h_approx()) * is_completed();
 }
 
 std::string Goal::serialize() const {
     std::stringstream ss;
     char delim = ';';
-    ss << DELIM << Entry::serialize() << delim << std::boolalpha
-       << completed << delim << est_length << delim << deadline;
+    ss << DELIM << Entry::serialize() << delim << est_length << delim << deadline;
     return ss.str();
 }
 
 std::string Goal::summary() const {
     std::stringstream ss;
     ss << Entry::summary() << color::bold_blue
-       << (completed ? "Is" : "Is not") << " completed\n"
        << "Estimated length: " << est_length.to_duration_printable() << "\n";
-
-    if (!deadline.incomplete() && deadline < DateTime::get_current()) {
+    if (!deadline.incomplete() && deadline < DateTime::get_current() && !is_completed()) {
         ss << color::red << "The task is overdue! It was due on: \n"
            << deadline.to_printable(true);
     } else {

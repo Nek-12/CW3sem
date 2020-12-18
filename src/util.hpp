@@ -71,7 +71,7 @@ class Log {
         static void flush() {
             if (get().use_cerr)
                 throw std::runtime_error("tried to flush console");
-            auto& ref = static_cast<std::fstream&>(stream());
+            auto& ref = static_cast<std::fstream&>(stream()); //NOLINT
             ref.close();
             ref.open(LOG_FNAME, std::fstream::out | std::fstream::trunc |
                                 std::fstream::in);
