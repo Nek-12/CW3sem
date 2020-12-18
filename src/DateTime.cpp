@@ -44,10 +44,40 @@ DateTime::DateTime(int year, int month, int day, int hour, int minute,
            << ":" << second;
         throw std::invalid_argument(ss.str());
     };
-    if ((year < 1970 && year != 0) || day > days_in(mon, year) || hour >= 24 || minute >= 60 || second >= 60 ||
-        hour < 0 ||
-        minute < 0 || second < 0)
+    if (year < 0 || day > days_in(mon, year) ||
+        hour >= 24 || minute >= 60 || second >= 60 || hour < 0 || minute < 0 || second < 0)
         exc();
+}
+
+DateTime DateTime::operator+=(const DateTime& rhs) {
+    int leap_years = std::abs(rhs.y) / 4;
+    s += rhs.s;
+    min += s / 60;
+    s %= 60;
+
+    min += rhs.min;
+    h += min / 60;
+    min %= 60;
+
+    h += rhs.h;
+    d += h / 24;
+    h %= 24;
+
+    d += rhs.d + leap_years;
+    mon += d / 30;
+    d %= 30; //FIXME: WRONG!
+
+    mon += rhs.mon;
+    y += mon / 12;
+    mon %= 12;
+
+    y += rhs.y;
+    return *this;
+}
+
+DateTime operator+(const DateTime& lhs, const DateTime& rhs) {
+    DateTime sum = lhs;
+    return sum += rhs;
 }
 
 DateTime DateTime::operator-=(const DateTime& rhs) {
@@ -82,16 +112,6 @@ DateTime DateTime::operator-=(const DateTime& rhs) {
     if (y < 0)
         y = 0;
 
-    return *this;
-}
-
-//FIXME: UNSAFE CRUTCH
-DateTime operator+(const DateTime& lhs, const DateTime& rhs) {
-    return DateTime::from_epoch(lhs.to_epoch() + rint(rhs.to_s_approx()));
-}
-
-DateTime DateTime::operator+=(const DateTime& rhs) {
-    *this = *this + rhs;
     return *this;
 }
 
@@ -148,42 +168,42 @@ int DateTime::days_in(int month, int year) {
 double DateTime::to_y_approx() const {
     double yd = APPROX_YEAR_DURATION_DAYS;
     return static_cast<double>(s) / 3600 / 24 / yd +
-            static_cast<double>(min) / 60 / 24 / yd +
-            static_cast<double>(h) / 24 / yd + static_cast<double>(d) / yd +
-            static_cast<double>(mon) / 12 + y;
+           static_cast<double>(min) / 60 / 24 / yd +
+           static_cast<double>(h) / 24 / yd + static_cast<double>(d) / yd +
+           static_cast<double>(mon) / 12 + y;
 }
 
 double DateTime::to_mon_approx() const {
     double md = APPROX_MONTH_DURATION_DAYS;
     return static_cast<double>(s) / 3600 / 24 / md +
-            static_cast<double>(min) / 60 / 24 / md +
-            static_cast<double>(h) / 24 / md + static_cast<double>(d) / md +
-            mon + y * APPROX_YEAR_DURATION_DAYS / md;
+           static_cast<double>(min) / 60 / 24 / md +
+           static_cast<double>(h) / 24 / md + static_cast<double>(d) / md +
+           mon + y * APPROX_YEAR_DURATION_DAYS / md;
 }
 
 double DateTime::to_d_approx() const {
     return static_cast<double>(s) / 3600 / 24 +
-            static_cast<double>(min) / 60 / 24 +
-            static_cast<double>(h) / 24 + d +
-            mon * APPROX_MONTH_DURATION_DAYS + y * APPROX_YEAR_DURATION_DAYS;
+           static_cast<double>(min) / 60 / 24 +
+           static_cast<double>(h) / 24 + d +
+           mon * APPROX_MONTH_DURATION_DAYS + y * APPROX_YEAR_DURATION_DAYS;
 }
 
 double DateTime::to_h_approx() const {
     return static_cast<double>(s) / 3600 + static_cast<double>(min) / 60 +
-            h + d * 24 + mon * APPROX_MONTH_DURATION_DAYS * 24 +
-            y * APPROX_YEAR_DURATION_DAYS * 24;
+           h + d * 24 + mon * APPROX_MONTH_DURATION_DAYS * 24 +
+           y * APPROX_YEAR_DURATION_DAYS * 24;
 }
 
 double DateTime::to_min_approx() const {
     return static_cast<double>(s) / 60 + min + h * 60 + d * 24 * 60 +
-            mon * APPROX_MONTH_DURATION_DAYS * 24 * 60 +
-            y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
+           mon * APPROX_MONTH_DURATION_DAYS * 24 * 60 +
+           y * APPROX_YEAR_DURATION_DAYS * 24 * 60;
 }
 
 double DateTime::to_s_approx() const {
     return s + min * 60 + h * 3600 + d * 24 * 3600 +
-            mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
-            y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
+           mon * APPROX_MONTH_DURATION_DAYS * 24 * 3600 +
+           y * APPROX_YEAR_DURATION_DAYS * 24 * 3600;
 }
 
 int DateTime::operator[](int n) const {
@@ -213,7 +233,7 @@ DateTime DateTime::from_stream(std::istream& is) {
 
 bool operator==(const DateTime& lhs, const DateTime& rhs) {
     return lhs.y == rhs.y && lhs.mon == rhs.mon && lhs.d == rhs.d &&
-            lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
+           lhs.h == rhs.h && lhs.min == rhs.min && lhs.s == rhs.s;
 }
 
 DateTime operator-(const DateTime& lhs, const DateTime& rhs) {
@@ -255,8 +275,8 @@ DateTime DateTime::get_current() {
 std::string DateTime::to_string() const {
     std::stringstream ss;
     ss << std::setfill('0') << std::setw(4) << y << "-" << std::setw(2) << mon
-            << "-" << std::setw(2) << d << " " << std::setw(2) << h
-            << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+       << "-" << std::setw(2) << d << " " << std::setw(2) << h
+       << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
     return ss.str();
 }
 
@@ -265,16 +285,16 @@ std::string DateTime::to_printable(bool short_date) const {
         return "----.--.-- --:--:--";
     std::stringstream ss;
     ss << weekday_string(y, mon, d, short_date) << ", "
-            << (short_date ? MONTHS_SHORT.at(mon - 1) : MONTHS.at(mon - 1)) << " " << d << number_postfix(d) << " "
-            << y << ", " << std::setfill('0')
-            << std::setw(2) << h << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
+       << (short_date ? MONTHS_SHORT.at(mon - 1) : MONTHS.at(mon - 1)) << " " << d << number_postfix(d) << " "
+       << y << ", " << std::setfill('0')
+       << std::setw(2) << h << ":" << std::setw(2) << min << ":" << std::setw(2) << s;
     return ss.str();
 }
 
 std::string DateTime::to_duration_printable() const {
     std::stringstream ss;
     ss << y << " years, " << mon << " months, " << d << " days, "
-            << h << " hrs, " << min << " min, " << s << " s. ";
+       << h << " hrs, " << min << " min, " << s << " s. ";
     return ss.str();
 }
 
@@ -282,7 +302,7 @@ bool DateTime::is_leap(int year) {
     if (year < 0)
         throw std::invalid_argument("negative year");
     return year != 0 &&
-            (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
+           (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0));
 }
 
 unsigned DateTime::get_weekday(int y, int m, int d) {
