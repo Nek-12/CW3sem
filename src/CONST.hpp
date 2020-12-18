@@ -34,7 +34,7 @@ namespace CONST {
     static constexpr svarr<7> HEADERS_ACTIVITY{"Name", "Cost", "Created", "Is archived?", "Time elapsed", "Total time",
                                                "Benefit multiplier"};
     static constexpr svarr<6> HEADERS_GOAL{"Name", "Cost", "Created", "Completed", "Est. Length", "Deadline"};
-    static constexpr svarr<7> HEADERS_HABIT{"Name", "Cost", "Created", "Check-ins", "Is archived?", "Best streak",
+    static constexpr svarr<7> HEADERS_HABIT{"Name", "Cost", "Created", "Is archived?", "Check-ins", "Best streak",
                                             "Streak"};
     static constexpr svarr<4> SORT_ENTRIES_MENU{"By name", "By date created", "By points earned", "Go back"};
 } //namespace CONST

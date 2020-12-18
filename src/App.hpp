@@ -89,8 +89,7 @@ class App {
                 default:
                     throw std::invalid_argument("This habit menu entry should not be available");
             }
-            if (!UI::yes_no("Continue working with " + h.get_name() + " ?"))
-                return;
+            wait(WAIT_TIME * 2);
         } //loop
     }
 
@@ -176,7 +175,6 @@ class App {
     }
 
     void search_entry() {
-
         std::vector<Entry*> sought;
         std::string s;
         DateTime dt;
@@ -206,22 +204,11 @@ class App {
         forward_entry_menu(sought[UI::select_entry(sought, "Select an entry")]);
     }
 
-    static Habit& add_habit() {
+    template<std::derived_from<Entry> T>
+    static T& add_entry(Journal<T>& j) {
         std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
         double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
-        return Data::get().h.emplace_back(gen_id(), name, cost);
-    }
-
-    static Activity& add_activity() {
-        std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
-        double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
-        return Data::get().a.emplace_back(gen_id(), name, cost);
-    }
-
-    Goal& add_goal() {
-        std::string name = UI::get_string("Enter the title: ", CHECK::LINE);
-        double cost = std::stod(UI::get_string("Enter the point cost: ", CHECK::DOUBLE));
-        return d.g.emplace_back(gen_id(), name, cost);
+        return j.emplace_back(gen_id(), name, cost);
     }
 
 //returns a password for a newly created account
@@ -316,54 +303,24 @@ class App {
         return false;
     }
 
-    //helper function to add additional menu points to the list
-    static auto add_entries_select_menu(std::vector<std::string_view> vals, bool hidden) {
-        vals.insert(vals.begin(), "+ Add New +");
-        vals.emplace_back((!hidden ? "- View hidden -" : " - View not hidden -"));
-        vals.emplace_back("<- Go back ");
-        return vals;
-    }
-
-    void select_activity_menu(bool hidden) {
-        auto filtered = d.a.filter_active_state(hidden);
-        std::vector<std::string_view> vals =
-                add_entries_select_menu(Journal<Activity>::as_names(filtered), hidden);
-        size_t selected = UI::select_entry(vals, "", UI::as_table(d.h, HEADERS_HABIT));
-        if (selected == vals.size() - 1) //go back
+    //menu function is a function ptr that is invokes when the entry is selected
+    //headers are for displaying the entry as a table
+    template<typename T, size_t V>
+    void select_menu(bool hidden, Journal<T>& j, void(App::*menu_func)(T&), svarr<V> headers) {
+        std::vector<T*> filtered = j.filter_active_state(hidden); //first get hidden or not hidden entries only
+        std::vector<std::string_view> names = Journal<T>::as_names(filtered); //get their names
+        names.insert(names.begin(), "+ Add New +"); //add other menu entries
+        names.emplace_back((!hidden ? "- View hidden -" : " - View not hidden -"));
+        names.emplace_back("<- Go back ");
+        size_t selected = UI::select_entry(names, "", UI::as_table(j, headers)); //select an entry
+        if (selected == names.size() - 1) //go back
             return;
-        else if (selected == vals.size() - 2) // show hidden/not
-            select_activity_menu(!hidden);
+        else if (selected == names.size() - 2) // show hidden/not
+            select_menu(!hidden, j, menu_func, headers);
         else if (selected == 0) //add new
-            activity_menu(add_activity());
-        else activity_menu(*filtered[selected - 1]); //account for the change (add new is inserted as first)
-    }
-
-    void select_habit_menu(bool hidden) {
-        auto filtered = d.h.filter_active_state(hidden);
-        std::vector<std::string_view> vals =
-                add_entries_select_menu(Journal<Habit>::as_names(d.h.filter_active_state(hidden)), hidden);
-        size_t selected = UI::select_entry(vals, "", UI::as_table(d.h, HEADERS_HABIT));
-        if (selected == vals.size() - 1) //go back
-            return;
-        else if (selected == vals.size() - 2) // show hidden/not
-            select_habit_menu(!hidden);
-        else if (selected == 0) //add new
-            habit_menu(add_habit());
-        else habit_menu(*filtered[selected - 1]); //account for the change (add new is inserted as first)
-    }
-
-    void select_goal_menu(bool hidden) {
-        auto filtered = d.g.filter_active_state(hidden);
-        std::vector<std::string_view> vals =
-                add_entries_select_menu(Journal<Goal>::as_names(d.g.filter_active_state(hidden)), hidden);
-        size_t selected = UI::select_entry(vals, "", UI::as_table(d.g, HEADERS_GOAL));
-        if (selected == vals.size() - 1) //go back
-            return;
-        else if (selected == vals.size() - 2) // show hidden/not
-            select_goal_menu(!hidden);
-        else if (selected == 0) //add new
-            goal_menu(add_goal());
-        else goal_menu(*filtered[selected - 1]); //account for the change (add new is inserted as first)
+            (this->*menu_func)(add_entry(j)); //invoke a menu on a freshly created entry
+            //account for the change (add new is inserted as first)
+        else (this->*menu_func)(*filtered[selected - 1]); //invoke menu on an existing entry
     }
 
 
@@ -375,13 +332,13 @@ class App {
                     display_report();
                     break;
                 case 1: //habits
-                    select_habit_menu(false);
+                    select_menu(false, d.h, &App::habit_menu, HEADERS_HABIT);
                     break;
                 case 2: //activities
-                    select_activity_menu(false);
+                    select_menu(false, d.a, &App::activity_menu, HEADERS_ACTIVITY);
                     break;
                 case 3: //goals
-                    select_goal_menu(false);
+                    select_menu(false, d.g, &App::goal_menu, HEADERS_GOAL);
                     break;
                 case 4:
                     search_entry();

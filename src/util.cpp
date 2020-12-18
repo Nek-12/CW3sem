@@ -104,7 +104,7 @@ auto check_string(const std::string& s, CHECK mode)
                     return msgFalse("invalid characters in a number");
             break;
         case CHECK::DOUBLE: // float
-            if (s.empty() || s.size() > 7)
+            if (s.empty() || s.size() > 10 || s == ".")
                 return msgFalse("too short/long for floating-point number");
             for (const auto& ch : s) {
                 if (!isdigit(ch) && ch != '.')
